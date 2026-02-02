@@ -2,15 +2,15 @@ import express from 'express';
 import cors from 'cors';
 
 // Controllers
-import portfolioHandler from './controllers/portfolio.js';
-import watchlistHandler from './controllers/watchlist.js';
-import sectorsHandler from './controllers/sectors.js';
-import insightsHandler from './controllers/insights.js';
-import batchQuotesHandler from './controllers/batch-quotes.js';
-import searchHandler from './controllers/search.js';
-import trendAlertsHandler from './controllers/trend-alerts.js';
-import healthHandler from './controllers/health.js';
-import stockDetailsHandler from './controllers/stock-details.js';
+import portfolioHandler from './_controllers/portfolio.js';
+import watchlistHandler from './_controllers/watchlist.js';
+import sectorsHandler from './_controllers/sectors.js';
+import insightsHandler from './_controllers/insights.js';
+import batchQuotesHandler from './_controllers/batch-quotes.js';
+import searchHandler from './_controllers/search.js';
+import trendAlertsHandler from './_controllers/trend-alerts.js';
+import healthHandler from './_controllers/health.js';
+import stockDetailsHandler from './_controllers/stock-details.js';
 
 const app = express();
 
