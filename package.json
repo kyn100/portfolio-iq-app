@@ -2,11 +2,19 @@
   "name": "portfolio-iq",
   "version": "1.0.0",
   "description": "Smart portfolio monitoring app with technical analysis and Buy/Hold/Sell recommendations",
+  "type": "module",
   "scripts": {
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm install && npm run build",
+    "vercel-build": "cd client && npm install && npm run build"
+  },
+  "dependencies": {
+    "yahoo-finance2": "^2.11.3",
+    "axios": "^1.6.5",
+    "technicalindicators": "^3.1.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
