@@ -11,6 +11,7 @@ import searchHandler from './_controllers/search.js';
 import trendAlertsHandler from './_controllers/trend-alerts.js';
 import healthHandler from './_controllers/health.js';
 import stockDetailsHandler from './_controllers/stock-details.js';
+import recommendationsHandler from './_controllers/recommendations.js';
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.all('/api/batch-quotes', batchQuotesHandler);
 app.all('/api/search', searchHandler);
 app.all('/api/trend-alerts', trendAlertsHandler);
 app.all('/api/health', healthHandler);
+app.all('/api/recommendations', recommendationsHandler);
 
 // Stock Details
 app.all('/api/stocks/:symbol', stockDetailsHandler);

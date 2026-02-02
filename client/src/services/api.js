@@ -250,3 +250,9 @@ export const searchStocks = async (query) => {
   if (!response.ok) throw new Error('Failed to search stocks');
   return response.json();
 };
+
+export const fetchRecommendations = async () => {
+  const response = await fetch(`${API_BASE}/recommendations`);
+  if (!response.ok) throw new Error('Failed to fetch recommendations');
+  return response.json();
+};

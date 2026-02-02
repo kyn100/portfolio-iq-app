@@ -76,3 +76,59 @@ export const generateMarketSummary = async (newsItems = [], events = [], innovat
         return `Unable to generate market summary (Error: ${error.message || "Unknown Error"}). Please verify your API Key permissions.`;
     }
 };
+
+export const generateStockRecommendations = async (marketData) => {
+    if (!genAI) {
+        console.warn("AI Recommendations: No API Key");
+        return { immediate: [], watchlist: [] };
+    }
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        const prompt = `
+        You are a Senior Portfolio Manager & Technical Analyst.
+        Analyze the following market data to generate a high-conviction "Top 10 Watchlist" for a retail investor.
+
+        ### Market Context
+        - **News Headlines**: ${marketData.news.map(n => n.title).slice(0, 5).join('; ')}
+        - **Leading Sectors**: ${marketData.sectors.slice(0, 3).map(s => s.name).join(', ')}
+        - **Technical Alerts**: ${marketData.trends.slice(0, 5).map(t => `${t.etf} (${t.direction})`).join(', ')}
+
+        ### Task
+        Identify 10 specific stocks (US Equities) that align with these trends.
+        Split them into two categories:
+        
+        1. **Immediate Opportunities** (5 Stocks): High-conviction setups where price action and narrative align RIGHT NOW (e.g., Breakouts, Reversals, Momentum).
+        2. **Radar Screen** (5 Stocks): Stocks with huge potential but are either overextended (waiting for pullback) or consolidating (waiting for breakout).
+
+        ### Output Format (JSON ONLY)
+        {
+            "immediate": [
+                { "symbol": "AAPL", "name": "Apple Inc", "price": 0, "reason": "Brief technical + fundamental rationale", "action": "But" }
+            ],
+            "watchlist": [
+                { "symbol": "TSLA", "name": "Tesla", "price": 0, "reason": "Waiting for support test at $200", "action": "Wait" }
+            ]
+        }
+        
+        RULES:
+        - Symbols must be valid US tickers.
+        - "reason" must be punchy and specific (max 15 words).
+        - "price" can be 0 (frontend will fetch real-time).
+        - Do not markdown the output. Return raw JSON.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (error) {
+        console.error("AI Recommendation Error:", error);
+        return {
+            immediate: [],
+            watchlist: []
+        };
+    }
+};

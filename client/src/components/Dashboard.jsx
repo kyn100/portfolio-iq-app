@@ -4,6 +4,7 @@ import AddStockForm from './AddStockForm';
 import SectorDashboard from './SectorDashboard';
 import InsightsDashboard from './InsightsDashboard';
 import TrendAlertsDashboard from './TrendAlertsDashboard';
+import AIWatchlistPanel from './AIWatchlistPanel';
 import {
   fetchPortfolio,
   addToPortfolio,
@@ -351,6 +352,7 @@ const Dashboard = ({ session }) => {
         {/* Watchlist Tab Content */}
         {activeTab === 'watchlist' && !loading && (
           <>
+            <AIWatchlistPanel onAdd={(symbol) => handleAddToWatchlist(symbol, 'AI Recommendation')} />
             {watchlistItems.length === 0 ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                 <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
