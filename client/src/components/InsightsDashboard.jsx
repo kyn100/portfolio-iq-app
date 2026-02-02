@@ -28,7 +28,9 @@ const InsightsDashboard = () => {
 
     if (error) return <div className="text-red-500 p-6">{error}</div>;
 
-    const { news, influencers, sentiment } = data;
+    const news = data.marketNews || [];
+    const influencers = data.influencerUpdates || [];
+    const sentiment = data.socialSentiment || [];
 
     return (
         <div className="space-y-8">
