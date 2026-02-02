@@ -12,7 +12,7 @@
     "vercel-build": "cd client && npm install && npm run build"
   },
   "dependencies": {
-    "yahoo-finance2": "^2.11.3",
+    "yahoo-finance2": "^3.0.0",
     "axios": "^1.6.5",
     "technicalindicators": "^3.1.0"
   },
