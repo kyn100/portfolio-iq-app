@@ -1,7 +1,5 @@
-import YahooFinance from 'yahoo-finance2';
+import yahooFinance from 'yahoo-finance2';
 import axios from 'axios';
-
-const yahooFinance = new YahooFinance();
 
 const FINNHUB_BASE = 'https://finnhub.io/api/v1';
 
