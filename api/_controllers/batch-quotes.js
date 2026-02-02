@@ -23,51 +23,61 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Limit batch size to prevent timeouts - reduced to 10 due to heavier load
-        const batch = symbols.slice(0, 10);
+        // Process all symbols, but in chunks to avoid rate limiting/timeouts
+        const CHUNK_SIZE = 4; // Process 4 at a time (conservative)
+        const results = [];
 
-        // Fetch in parallel
-        const quotes = await Promise.all(
-            batch.map(async (symbol) => {
-                try {
-                    // Fetch all required data in parallel
-                    // We need history for technical analysis
-                    const [quote, historicalData] = await Promise.all([
-                        getStockQuote(symbol),
-                        getHistoricalData(symbol, '6mo')
-                    ]);
+        // Helper to process a single symbol
+        const processSymbol = async (symbol) => {
+            try {
+                // Fetch all required data in parallel
+                const [quote, historicalData] = await Promise.all([
+                    getStockQuote(symbol),
+                    getHistoricalData(symbol, '6mo')
+                ]);
 
-                    // Run Analysis
-                    const analysis = analyzeStock(historicalData, quote);
+                // Run Analysis
+                const analysis = analyzeStock(historicalData, quote);
 
-                    // Get Sector Comparison (lightweight check, can fail safely)
-                    let sectorComparison = null;
-                    if (quote.sector) {
-                        try {
-                            sectorComparison = await getSectorComparison(symbol, quote.sector);
-                        } catch (e) {
-                            console.warn(`Sector comparison failed for ${symbol}`);
-                        }
+                // Get Sector Comparison (lightweight check, can fail safely)
+                let sectorComparison = null;
+                if (quote.sector) {
+                    try {
+                        sectorComparison = await getSectorComparison(symbol, quote.sector);
+                    } catch (e) {
+                        console.warn(`Sector comparison failed for ${symbol}`);
                     }
-
-                    return {
-                        symbol: symbol.toUpperCase(),
-                        data: {
-                            ...quote,
-                            analysis,
-                            sectorComparison,
-                            historicalData: historicalData.slice(-30) // Return last 30 days for charts
-                        },
-                        error: null
-                    };
-                } catch (e) {
-                    console.error(`Error fetching ${symbol}:`, e.message);
-                    return { symbol: symbol.toUpperCase(), data: null, error: e.message };
                 }
-            })
-        );
 
-        res.status(200).json(quotes);
+                return {
+                    symbol: symbol.toUpperCase(),
+                    data: {
+                        ...quote,
+                        analysis,
+                        sectorComparison,
+                        historicalData: historicalData.slice(-30)
+                    },
+                    error: null
+                };
+            } catch (e) {
+                console.error(`Error fetching ${symbol}:`, e.message);
+                return { symbol: symbol.toUpperCase(), data: null, error: e.message };
+            }
+        };
+
+        // Execution Loop
+        for (let i = 0; i < symbols.length; i += CHUNK_SIZE) {
+            const chunk = symbols.slice(i, i + CHUNK_SIZE);
+            const chunkResults = await Promise.all(chunk.map(processSymbol));
+            results.push(...chunkResults);
+
+            // Small delay between chunks to be nice to API
+            if (i + CHUNK_SIZE < symbols.length) {
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        res.status(200).json(results);
     } catch (error) {
         console.error('Batch fetch error:', error);
         res.status(500).json({ error: error.message });
