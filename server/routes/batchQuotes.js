@@ -1,6 +1,7 @@
 
 import express from 'express';
-import { getStockQuote } from '../services/yahooFinance.js';
+import { getStockQuote, getHistoricalData, getSectorComparison } from '../services/yahooFinance.js';
+import { analyzeStock } from '../services/technicalAnalysis.js';
 
 const router = express.Router();
 
@@ -13,14 +14,41 @@ router.post('/', async (req, res) => {
 
     try {
         // Limit batch size
-        const batch = symbols.slice(0, 20);
+        const batch = symbols.slice(0, 10);
 
         // Fetch in parallel
         const quotes = await Promise.all(
             batch.map(async (symbol) => {
                 try {
-                    const quote = await getStockQuote(symbol);
-                    return { symbol: symbol.toUpperCase(), data: quote, error: null };
+                    // Fetch all required data in parallel
+                    const [quote, historicalData] = await Promise.all([
+                        getStockQuote(symbol),
+                        getHistoricalData(symbol, '6mo')
+                    ]);
+
+                    // Run Analysis
+                    const analysis = analyzeStock(historicalData, quote);
+
+                    // Get Sector Comparison
+                    let sectorComparison = null;
+                    if (quote.sector) {
+                        try {
+                            sectorComparison = await getSectorComparison(symbol, quote.sector);
+                        } catch (e) {
+                            console.warn(`Sector comparison failed for ${symbol}`);
+                        }
+                    }
+
+                    return {
+                        symbol: symbol.toUpperCase(),
+                        data: {
+                            ...quote,
+                            analysis,
+                            sectorComparison,
+                            historicalData: historicalData.slice(-30)
+                        },
+                        error: null
+                    };
                 } catch (e) {
                     console.error(`Error fetching ${symbol}:`, e.message);
                     return { symbol: symbol.toUpperCase(), data: null, error: e.message };
