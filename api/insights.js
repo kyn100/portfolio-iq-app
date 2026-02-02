@@ -1,4 +1,5 @@
 import { getMarketNews, getEconomicEvents, getSocialSentiment } from './lib/yahooFinance.js';
+import { generateMarketSummary } from './lib/aiSummary.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -18,10 +19,14 @@ export default async function handler(req, res) {
             getSocialSentiment()
         ]);
 
+        // Generate AI Summary
+        const summary = await generateMarketSummary(news, events);
+
         res.status(200).json({
             marketNews: news,
             economicEvents: events,
-            socialSentiment: sentiment
+            socialSentiment: sentiment,
+            marketSummary: summary
         });
     } catch (error) {
         console.error('Error fetching insights:', error);
