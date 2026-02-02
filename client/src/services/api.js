@@ -1,110 +1,231 @@
+import { supabase } from '../supabase';
+
 const API_BASE = '/api';
 
-// Portfolio API
-export const fetchPortfolio = async () => {
-  const response = await fetch(`${API_BASE}/portfolio`);
-  if (!response.ok) throw new Error('Failed to fetch portfolio');
-  return response.json();
-};
+// --- Portfolio Functions ---
 
-export const addToPortfolio = async (symbol, quantity = 0, purchasePrice = 0) => {
-  const response = await fetch(`${API_BASE}/portfolio`, {
+export const fetchPortfolio = async () => {
+  // 1. Get user session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  // 2. Fetch portfolio DB items from Supabase
+  const { data: items, error } = await supabase
+    .from('portfolio')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!items || items.length === 0) return { items: [], summary: { totalValue: 0, totalCost: 0, totalGainLoss: 0, stockCount: 0, totalGainLossPercent: 0 } };
+
+  // 3. Get unique symbols to fetch prices
+  const uniqueSymbols = [...new Set(items.map(item => item.symbol))];
+
+  // 4. Fetch live prices from our Vercel API
+  const pricesResponse = await fetch(`${API_BASE}/batch-quotes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol, quantity, purchasePrice }),
+    body: JSON.stringify({ symbols: uniqueSymbols })
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to add to portfolio');
+
+  const priceData = await pricesResponse.json();
+  const priceMap = {};
+  if (Array.isArray(priceData)) {
+    priceData.forEach(p => {
+      if (p.data) priceMap[p.symbol] = p.data;
+    });
   }
-  return response.json();
+
+  // 5. Merge DB data with Price data
+  const mergedItems = items.map(item => {
+    const quote = priceMap[item.symbol];
+    if (!quote) return { ...item, error: 'Failed to fetch price' };
+
+    const currentValue = quote.price * item.quantity;
+    const costBasis = item.purchase_price * item.quantity;
+    const gainLoss = currentValue - costBasis;
+    const gainLossPercent = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0;
+
+    return {
+      ...item,
+      ...quote, // Spread all quote properties (price, change, peRatio, etc.)
+      currentValue,
+      costBasis,
+      gainLoss,
+      gainLossPercent,
+      currentPrice: quote.price // Ensure explicit field
+    };
+  });
+
+  // 6. Calculate Summary
+  const summary = mergedItems.reduce(
+    (acc, item) => {
+      if (!item.error) {
+        acc.totalValue += item.currentValue || 0;
+        acc.totalCost += item.costBasis || 0;
+        acc.totalGainLoss += item.gainLoss || 0;
+        acc.stockCount += 1;
+      }
+      return acc;
+    },
+    { totalValue: 0, totalCost: 0, totalGainLoss: 0, stockCount: 0 }
+  );
+
+  summary.totalGainLossPercent = summary.totalCost > 0
+    ? (summary.totalGainLoss / summary.totalCost) * 100
+    : 0;
+
+  return { items: mergedItems, summary };
 };
 
-export const updatePortfolioItem = async (id, quantity, purchasePrice) => {
-  const response = await fetch(`${API_BASE}/portfolio/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ quantity, purchasePrice }),
-  });
-  if (!response.ok) throw new Error('Failed to update portfolio item');
-  return response.json();
+export const addToPortfolio = async (symbol, quantity, purchasePrice) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('portfolio')
+    .insert([{
+      user_id: session.user.id,
+      symbol: symbol.toUpperCase(),
+      quantity: parseFloat(quantity),
+      purchase_price: parseFloat(purchasePrice)
+    }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
 };
 
 export const removeFromPortfolio = async (id) => {
-  const response = await fetch(`${API_BASE}/portfolio/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) throw new Error('Failed to remove from portfolio');
-  return response.json();
+  const { error } = await supabase
+    .from('portfolio')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
-// Watchlist API
+export const updatePortfolioItem = async (id, quantity, purchasePrice) => {
+  const { error } = await supabase
+    .from('portfolio')
+    .update({ quantity: parseFloat(quantity), purchase_price: parseFloat(purchasePrice) })
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
+};
+
+
+// --- Watchlist Functions ---
+
 export const fetchWatchlist = async () => {
-  const response = await fetch(`${API_BASE}/watchlist`);
-  if (!response.ok) throw new Error('Failed to fetch watchlist');
-  return response.json();
-};
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
 
-export const addToWatchlist = async (symbol, notes = '') => {
-  const response = await fetch(`${API_BASE}/watchlist`, {
+  // 1. Fetch watchlist from Supabase
+  const { data: items, error } = await supabase
+    .from('watchlist')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!items || items.length === 0) return { items: [] };
+
+  // 2. Fetch prices
+  const uniqueSymbols = [...new Set(items.map(item => item.symbol))];
+  const pricesResponse = await fetch(`${API_BASE}/batch-quotes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol, notes }),
+    body: JSON.stringify({ symbols: uniqueSymbols })
   });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to add to watchlist');
+
+  const priceData = await pricesResponse.json();
+  const priceMap = {};
+  if (Array.isArray(priceData)) {
+    priceData.forEach(p => {
+      if (p.data) priceMap[p.symbol] = p.data;
+    });
   }
-  return response.json();
+
+  // 3. Merge
+  const mergedItems = items.map(item => {
+    const quote = priceMap[item.symbol];
+    if (!quote) return { ...item, error: 'Failed to fetch price' };
+
+    return {
+      ...item,
+      ...quote,
+      currentPrice: quote.price, // Ensure compatibility
+      change: quote.change,      // Daily change
+      changePercent: quote.changePercent
+    };
+  });
+
+  return { items: mergedItems };
 };
 
-export const updateWatchlistItem = async (id, notes) => {
-  const response = await fetch(`${API_BASE}/watchlist/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ notes }),
-  });
-  if (!response.ok) throw new Error('Failed to update watchlist item');
-  return response.json();
+export const addToWatchlist = async (symbol) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('watchlist')
+    .insert([{
+      user_id: session.user.id,
+      symbol: symbol.toUpperCase()
+    }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
 };
 
 export const removeFromWatchlist = async (id) => {
-  const response = await fetch(`${API_BASE}/watchlist/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) throw new Error('Failed to remove from watchlist');
-  return response.json();
+  const { error } = await supabase
+    .from('watchlist')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
-// Stock search
-export const searchStocks = async (query) => {
-  const response = await fetch(`${API_BASE}/stocks/search?q=${encodeURIComponent(query)}`);
-  if (!response.ok) throw new Error('Failed to search stocks');
-  return response.json();
+export const updateWatchlistItem = async (id, notes) => {
+  // Note: 'notes' field supported?
+  const { error } = await supabase
+    .from('watchlist')
+    .update({ notes: notes }) // Assuming notes field exists in schema
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
-export const getStockData = async (symbol) => {
-  const response = await fetch(`${API_BASE}/stocks/${symbol}`);
-  if (!response.ok) throw new Error('Failed to fetch stock data');
-  return response.json();
-};
-// Sectors API
+
+// --- Other API ---
+
 export const fetchSectors = async () => {
   const response = await fetch(`${API_BASE}/sectors`);
-  if (!response.ok) throw new Error('Failed to fetch sector data');
+  if (!response.ok) throw new Error('Failed to fetch sectors');
   return response.json();
 };
 
-// Insights API
+export const fetchTrendAlerts = async () => {
+  const response = await fetch(`${API_BASE}/trend-alerts`);
+  if (!response.ok) throw new Error('Failed to fetch trend alerts');
+  return response.json();
+};
+
 export const fetchInsights = async () => {
   const response = await fetch(`${API_BASE}/insights`);
   if (!response.ok) throw new Error('Failed to fetch insights');
   return response.json();
 };
 
-// Trend Alerts API
-export const fetchTrendAlerts = async () => {
-  const response = await fetch(`${API_BASE}/trend-alerts`);
-  if (!response.ok) throw new Error('Failed to fetch trend alerts');
+export const getStockData = async (symbol) => {
+  // This is used for search/details
+  const response = await fetch(`${API_BASE}/stocks/${symbol}`);
+  if (!response.ok) throw new Error('Failed to fetch stock data');
   return response.json();
 };
