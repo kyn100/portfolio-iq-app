@@ -119,7 +119,7 @@ const SECTOR_BENCHMARKS = {
   'Cybersecurity': 'HACK',
 
   // Healthcare Sub-sectors
-  'Biotech': 'IBB',
+  'Biotechnology': 'XBI',
 
   // Industrial Sub-sectors
   'Defence': 'ITA',
@@ -759,7 +759,7 @@ const SECTOR_ALTERNATIVES = {
   'Cybersecurity': ['CRWD', 'PANW', 'FTNT', 'ZS', 'OKTA', 'NET', 'S'],
 
   // Healthcare Sub-sectors
-  'Biotech': ['AMGN', 'GILD', 'VRTX', 'REGN', 'BIIB', 'MRNA', 'BNTX', 'ILMN'],
+  'Biotechnology': ['AMGN', 'GILD', 'VRTX', 'REGN', 'BIIB', 'MRNA', 'BNTX', 'ILMN'],
 
   // Industrial Sub-sectors
   'Defence': ['LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'LDOS'],
