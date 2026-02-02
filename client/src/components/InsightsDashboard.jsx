@@ -5,19 +5,33 @@ const InsightsDashboard = () => {
     const [data, setData] = useState({ news: [], influencers: [], sentiment: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
+
+    const loadData = async () => {
+        try {
+            // Don't set loading=true on background refreshes to avoid flashing
+            if (!lastUpdated) setLoading(true);
+
+            const result = await fetchInsights();
+            setData(result);
+            setLastUpdated(new Date());
+            setError(null);
+        } catch (err) {
+            console.error("Failed to refresh insights:", err);
+            // Only set error state if it's the initial load
+            if (!lastUpdated) setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                const result = await fetchInsights();
-                setData(result);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
         loadData();
+
+        // Refresh every 30 minutes (30 * 60 * 1000 ms)
+        const intervalId = setInterval(loadData, 30 * 60 * 1000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     if (loading) return (
@@ -108,11 +122,18 @@ const InsightsDashboard = () => {
         <div className="space-y-8">
             {/* AI Market Briefing */}
             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-xl shadow-md text-white border border-blue-500/30 ring-1 ring-white/10">
-                <div className="flex items-center gap-2 mb-4 opacity-75 text-xs font-bold tracking-widest uppercase">
-                    <svg className="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    AI Market Intelligence
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2 opacity-75 text-xs font-bold tracking-widest uppercase">
+                        <svg className="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        AI Market Intelligence
+                    </div>
+                    {lastUpdated && (
+                        <div className="text-xs text-blue-200/60 font-medium">
+                            Updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    )}
                 </div>
 
                 {renderContent()}
