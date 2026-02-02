@@ -5,6 +5,7 @@ const SectorDashboard = () => {
     const [sectors, setSectors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeTimeframe, setActiveTimeframe] = useState('today'); // 'today', '1week', 'ytd'
 
     useEffect(() => {
         const loadSectors = async () => {
@@ -28,27 +29,91 @@ const SectorDashboard = () => {
 
     if (error) return <div className="text-red-500 p-6">{error}</div>;
 
+    // Helper to get value based on timeframe
+    const getValue = (sector) => {
+        const perf = sector.performance || {};
+        switch (activeTimeframe) {
+            case '1week': return perf.oneWeek || 0;
+            case 'ytd': return perf.ytd || 0;
+            case 'today': default: return perf.todayChange || 0;
+        }
+    };
+
+    const getLabel = () => {
+        switch (activeTimeframe) {
+            case '1week': return '1 Week Performance';
+            case 'ytd': return 'YTD Performance';
+            case 'today': default: return 'Today\'s Performance';
+        }
+    };
+
     return (
         <div className="space-y-8">
             {/* Heatmap Section */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Sector Heatmap (YTD Performance)</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 className="text-lg font-bold text-gray-900">Sector Heatmap ({getLabel()})</h2>
+
+                    {/* Timeframe Tabs */}
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <button
+                            onClick={() => setActiveTimeframe('today')}
+                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === 'today'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            Today
+                        </button>
+                        <button
+                            onClick={() => setActiveTimeframe('1week')}
+                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === '1week'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            1 Week
+                        </button>
+                        <button
+                            onClick={() => setActiveTimeframe('ytd')}
+                            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === 'ytd'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900'
+                                }`}
+                        >
+                            YTD
+                        </button>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     {sectors.map((sector) => {
-                        const ytd = sector.performance?.ytd || 0;
-                        // Color scale
+                        const val = getValue(sector);
+                        // Color scale (dynamic ranges)
                         let bgClass = 'bg-gray-100';
-                        if (ytd > 20) bgClass = 'bg-green-600 text-white';
-                        else if (ytd > 10) bgClass = 'bg-green-500 text-white';
-                        else if (ytd > 0) bgClass = 'bg-green-400 text-white';
-                        else if (ytd > -5) bgClass = 'bg-red-300 text-gray-900';
-                        else if (ytd > -15) bgClass = 'bg-red-400 text-white';
-                        else bgClass = 'bg-red-600 text-white';
+
+                        // Slightly stricter scale for YTD vs Today
+                        if (activeTimeframe === 'ytd') {
+                            if (val > 20) bgClass = 'bg-green-600 text-white';
+                            else if (val > 10) bgClass = 'bg-green-500 text-white';
+                            else if (val > 0) bgClass = 'bg-green-400 text-white';
+                            else if (val > -5) bgClass = 'bg-red-300 text-gray-900';
+                            else if (val > -15) bgClass = 'bg-red-400 text-white';
+                            else bgClass = 'bg-red-600 text-white';
+                        } else {
+                            // Scale for daily/weekly (smaller moves)
+                            if (val > 3) bgClass = 'bg-green-600 text-white';
+                            else if (val > 1.5) bgClass = 'bg-green-500 text-white';
+                            else if (val > 0) bgClass = 'bg-green-400 text-white';
+                            else if (val > -1.5) bgClass = 'bg-red-300 text-gray-900';
+                            else if (val > -3) bgClass = 'bg-red-400 text-white';
+                            else bgClass = 'bg-red-600 text-white';
+                        }
 
                         return (
                             <div key={sector.name} className={`${bgClass} p-4 rounded-lg flex flex-col items-center justify-center text-center transition-transform hover:scale-105 cursor-default`}>
                                 <div className="text-xs font-semibold opacity-90 uppercase tracking-wider mb-1">{sector.name}</div>
-                                <div className="text-lg font-bold">{ytd > 0 ? '+' : ''}{ytd.toFixed(1)}%</div>
+                                <div className="text-lg font-bold">{val > 0 ? '+' : ''}{val.toFixed(2)}%</div>
                                 <div className="text-xs opacity-75">{sector.etf}</div>
                             </div>
                         );
