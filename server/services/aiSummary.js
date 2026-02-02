@@ -13,7 +13,7 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         // Prepare context from news
         const newsContext = newsItems.slice(0, 8).map(n => `- ${n.title} (${n.publisher})`).join('\n');
