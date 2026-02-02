@@ -217,82 +217,58 @@ const Dashboard = ({ session }) => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-4">Portfolio Summary</h2>
 
-            {/* Money In / Money Out Visualization */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Money In vs Out</span>
-                <span className={`text-lg font-bold ${summary.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {summary.totalCost > 0 ? (summary.totalValue / summary.totalCost).toFixed(2) : '0.00'}x
-                </span>
-              </div>
-              <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
-                {/* Money In (Cost) - Base bar */}
-                <div className="absolute inset-0 flex items-center">
-                  <div
-                    className="h-full bg-blue-500 flex items-center justify-end pr-2"
-                    style={{
-                      width: summary.totalGainLoss >= 0
-                        ? `${Math.min(100, (summary.totalCost / summary.totalValue) * 100)}%`
-                        : '100%'
-                    }}
-                  >
-                    <span className="text-xs font-medium text-white whitespace-nowrap">
-                      In: ${summary.totalCost?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                  </div>
+            {/* Money In / Money Out Visualization (Premium) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+              {/* Money In Card (Invested) */}
+              <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <svg className="w-24 h-24 text-slate-800" fill="currentColor" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
-                {/* Gain portion - Green overlay */}
-                {summary.totalGainLoss > 0 && (
-                  <div
-                    className="absolute right-0 top-0 h-full bg-green-500 flex items-center justify-center"
-                    style={{ width: `${Math.min(50, (summary.totalGainLoss / summary.totalValue) * 100)}%` }}
-                  >
-                    <span className="text-xs font-medium text-white whitespace-nowrap">
-                      +${summary.totalGainLoss?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                  </div>
-                )}
-                {/* Loss portion - Red showing shrinkage */}
-                {summary.totalGainLoss < 0 && (
-                  <div
-                    className="absolute right-0 top-0 h-full bg-red-400 flex items-center justify-center"
-                    style={{ width: `${Math.min(50, Math.abs(summary.totalGainLoss / summary.totalCost) * 100)}%` }}
-                  >
-                    <span className="text-xs font-medium text-white whitespace-nowrap">
-                      -${Math.abs(summary.totalGainLoss)?.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </span>
-                  </div>
-                )}
+                <div className="relative z-10">
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span> Money In
+                  </p>
+                  <h3 className="text-4xl font-bold text-slate-800 tracking-tight">
+                    ${summary.totalCost?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">Principal Invested</p>
+                </div>
               </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-500">
-                <span>Invested: ${summary.totalCost?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                <span>Current: ${summary.totalValue?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <div className="text-sm text-gray-500">Total Value</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  ${summary.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {/* Money Out Card (Current Value) */}
+              <div className={`p-6 rounded-2xl border shadow-sm relative overflow-hidden group transition-all ${summary.totalGainLoss >= 0
+                  ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100'
+                  : 'bg-gradient-to-br from-rose-50 to-white border-rose-100'
+                }`}>
+                <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity ${summary.totalGainLoss >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+                  <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Total Cost</div>
-                <div className="text-2xl font-bold text-gray-900">
-                  ${summary.totalCost?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Total Gain/Loss</div>
-                <div className={`text-2xl font-bold ${summary.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {summary.totalGainLoss >= 0 ? '+' : ''}${summary.totalGainLoss?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Return</div>
-                <div className={`text-2xl font-bold ${summary.totalGainLossPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {summary.totalGainLossPercent >= 0 ? '+' : ''}{summary.totalGainLossPercent?.toFixed(2)}%
+
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1 ${summary.totalGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        <span className={`w-2 h-2 rounded-full ${summary.totalGainLoss >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                        Current Value
+                      </p>
+                      <h3 className={`text-4xl font-bold tracking-tight ${summary.totalGainLoss >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
+                        ${summary.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </h3>
+                    </div>
+                    <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${summary.totalGainLoss >= 0
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                        : 'bg-rose-100 text-rose-700 border-rose-200'
+                      }`}>
+                      {summary.totalGainLossPercent >= 0 ? '+' : ''}{summary.totalGainLossPercent?.toFixed(2)}%
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className={`text-sm font-bold ${summary.totalGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {summary.totalGainLoss >= 0 ? '+' : ''}${summary.totalGainLoss?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs text-gray-400 font-medium">Total Return</span>
+                  </div>
                 </div>
               </div>
             </div>
