@@ -9,6 +9,7 @@ import insightsRouter from './routes/insights.js';
 import batchQuotesRouter from './routes/batchQuotes.js';
 import searchRouter from './routes/search.js';
 import trendAlertsRouter from './routes/trendAlerts.js';
+import recommendationsHandler from '../api/_controllers/recommendations.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,6 +27,7 @@ app.use('/api/insights', insightsRouter);
 app.use('/api/trend-alerts', trendAlertsRouter);
 app.use('/api/batch-quotes', batchQuotesRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/recommendations', recommendationsHandler);
 
 // Health check
 app.get('/api/health', (req, res) => {
