@@ -503,15 +503,28 @@ const detectTrendTurning = async (symbol, sectorName) => {
       }
     }
 
-    // 2. RSI Extreme Reversal
+    // 2. RSI Extreme Reversal (with Price Confirmation)
     if (rsi < 30) {
-      signals.push({ type: 'RSI Oversold', description: `RSI at ${rsi.toFixed(1)} - Potential bullish reversal` });
-      if (!turningDirection) turningDirection = 'bullish';
-      strength += 1;
+      if (todayChange > 0) {
+        signals.push({ type: 'RSI Reversal', description: `RSI Oversold (${rsi.toFixed(1)}) confirmed by price rebound (+${todayChange.toFixed(2)}%)` });
+        if (!turningDirection) turningDirection = 'bullish';
+        strength += 2;
+      } else {
+        signals.push({ type: 'Deep Oversold', description: `RSI at ${rsi.toFixed(1)} describes oversold conditions (Monitoring for reversal)` });
+        // Mark as neutral/watch unless other signals override
+        if (!turningDirection) turningDirection = 'neutral';
+        strength += 0.5;
+      }
     } else if (rsi > 70) {
-      signals.push({ type: 'RSI Overbought', description: `RSI at ${rsi.toFixed(1)} - Potential bearish reversal` });
-      if (!turningDirection) turningDirection = 'bearish';
-      strength += 1;
+      if (todayChange < 0) {
+        signals.push({ type: 'RSI Trend Exhaustion', description: `RSI Overbought (${rsi.toFixed(1)}) confirmed by pullback (${todayChange.toFixed(2)}%)` });
+        if (!turningDirection) turningDirection = 'bearish';
+        strength += 2;
+      } else {
+        signals.push({ type: 'Extreme Overbought', description: `RSI at ${rsi.toFixed(1)} indicates potential overheating` });
+        if (!turningDirection) turningDirection = 'neutral';
+        strength += 0.5;
+      }
     }
 
     // 3. Momentum Divergence (short-term vs long-term)
