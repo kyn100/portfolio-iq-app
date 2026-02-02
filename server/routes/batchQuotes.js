@@ -20,18 +20,25 @@ router.post('/', async (req, res) => {
 
         // Process sequentially to be gentle on Yahoo API (avoid 429)
         for (const symbol of batch) {
+            let quote = null;
+            let analysis = null;
+            let historicalData = [];
+            let sectorComparison = null;
+
             try {
-                // Fetch all required data in parallel (per stock)
-                const [quote, historicalData] = await Promise.all([
-                    getStockQuote(symbol),
-                    getHistoricalData(symbol, '6mo')
-                ]);
+                // 1. Fetch quote first (Critically required)
+                quote = await getStockQuote(symbol);
 
-                // Run Analysis
-                const analysis = analyzeStock(historicalData, quote);
+                // 2. Try fetching history (Non-critical, can display price without it)
+                try {
+                    historicalData = await getHistoricalData(symbol, '6mo');
+                    analysis = analyzeStock(historicalData, quote);
+                } catch (e) {
+                    console.warn(`Analysis failed for ${symbol}: ${e.message}`);
+                    historicalData = []; // Fallback empty
+                }
 
-                // Get Sector Comparison
-                let sectorComparison = null;
+                // 3. Sector Comparison (Non-critical)
                 if (quote.sector) {
                     try {
                         sectorComparison = await getSectorComparison(symbol, quote.sector);
@@ -52,12 +59,13 @@ router.post('/', async (req, res) => {
                 });
 
             } catch (e) {
+                // Only fail totally if QUOTE fails
                 console.error(`Error fetching ${symbol}:`, e.message);
                 quotes.push({ symbol: symbol.toUpperCase(), data: null, error: e.message });
             }
 
             // Small delay between stocks
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
 
         res.json(quotes);

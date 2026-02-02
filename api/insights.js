@@ -1,4 +1,4 @@
-import { getMarketNews, getInfluencerUpdates, getSocialSentiment } from './lib/yahooFinance.js';
+import { getMarketNews, getEconomicEvents, getSocialSentiment } from './lib/yahooFinance.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -12,15 +12,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        const [news, influencers, sentiment] = await Promise.all([
+        const [news, events, sentiment] = await Promise.all([
             getMarketNews(),
-            getInfluencerUpdates(),
+            getEconomicEvents(),
             getSocialSentiment()
         ]);
 
         res.status(200).json({
             marketNews: news,
-            influencerUpdates: influencers,
+            economicEvents: events,
             socialSentiment: sentiment
         });
     } catch (error) {

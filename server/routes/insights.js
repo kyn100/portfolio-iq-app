@@ -1,19 +1,19 @@
 import { Router } from 'express';
-import { getMarketNews, getInfluencerUpdates, getSocialSentiment } from '../services/yahooFinance.js';
+import { getMarketNews, getEconomicEvents, getSocialSentiment } from '../services/yahooFinance.js';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
     try {
-        const [news, influencers, sentiment] = await Promise.all([
+        const [news, events, sentiment] = await Promise.all([
             getMarketNews(),
-            getInfluencerUpdates(),
+            getEconomicEvents(),
             getSocialSentiment()
         ]);
 
         res.json({
             marketNews: news,
-            influencerUpdates: influencers,
+            economicEvents: events,
             socialSentiment: sentiment
         });
     } catch (error) {

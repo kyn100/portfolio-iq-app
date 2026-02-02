@@ -29,7 +29,7 @@ const InsightsDashboard = () => {
     if (error) return <div className="text-red-500 p-6">{error}</div>;
 
     const news = data.marketNews || [];
-    const influencers = data.influencerUpdates || [];
+    const economicEvents = data.economicEvents || [];
     const sentiment = data.socialSentiment || [];
 
     return (
@@ -40,7 +40,7 @@ const InsightsDashboard = () => {
                     <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                     </svg>
-                    Latest Economic News
+                    Latest Market News
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {news.map((item, idx) => (
@@ -68,23 +68,23 @@ const InsightsDashboard = () => {
                 </div>
             </div>
 
-            {/* Influencer Insights */}
+            {/* Economic Calendar / Events */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    What Famous Investors Are Saying
+                    Key Economic Events & Trends
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {influencers.map((inf, idx) => (
+                    {economicEvents.map((cat, idx) => (
                         <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
-                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 font-bold">
-                                {inf.name}
+                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-3 font-bold flex justify-between items-center">
+                                <span>{cat.name}</span>
                             </div>
                             <div className="p-4 space-y-3">
-                                {inf.news.length === 0 && <div className="text-gray-400 italic text-sm">No recent updates</div>}
-                                {inf.news.map((article, nIdx) => (
+                                {cat.news.length === 0 && <div className="text-gray-400 italic text-sm">No recent updates</div>}
+                                {cat.news.map((article, nIdx) => (
                                     <a
                                         key={nIdx}
                                         href={article.link}
@@ -98,35 +98,36 @@ const InsightsDashboard = () => {
                             </div>
                         </div>
                     ))}
+                    {economicEvents.length === 0 && <div className="text-gray-400 italic col-span-3">No events available</div>}
                 </div>
             </div>
 
-            {/* Social Sentiment */}
+            {/* Social Sentiment (Retained) */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                     </svg>
-                    Social Media &amp; Retail Sentiment
+                    Social Media Sentiment
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {sentiment.map((item, idx) => (
                         <a
                             key={idx}
                             href={item.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block p-4 bg-green-50 rounded-lg border border-green-100 hover:shadow-md hover:border-green-300 transition-all group"
+                            className="block p-4 bg-orange-50 rounded-lg border border-orange-100 hover:shadow-md hover:border-orange-200 transition-all"
                         >
-                            <h4 className="text-sm font-medium text-gray-900 group-hover:text-green-700 line-clamp-2 leading-snug mb-2">
+                            <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug">
                                 {item.title}
                             </h4>
                             <div className="text-xs text-gray-500">
-                                <span className="font-medium">{item.publisher}</span>
+                                {new Date((item.providerPublishTime || 0) * 1000).toLocaleDateString()}
                             </div>
                         </a>
                     ))}
-                    {sentiment.length === 0 && <div className="text-gray-400 italic col-span-3">No sentiment data available</div>}
+                    {sentiment.length === 0 && <div className="text-gray-400 italic col-span-4">No social sentiment data</div>}
                 </div>
             </div>
         </div>

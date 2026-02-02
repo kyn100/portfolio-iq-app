@@ -903,27 +903,27 @@ export const getMarketNews = async () => {
   }
 };
 
-export const getInfluencerUpdates = async () => {
-  const influencers = [
-    { name: 'Warren Buffett', query: 'Warren Buffett news' },
-    { name: 'Ray Dalio', query: 'Ray Dalio news' },
-    { name: 'Jerome Powell', query: 'Fed Chair Powell news' },
-    { name: 'Michael Burry', query: 'Michael Burry news' },
-    { name: 'Elon Musk', query: 'Elon Musk business news' }
+export const getEconomicEvents = async () => {
+  const categories = [
+    { name: 'Federal Reserve & Rates', query: 'Federal Reserve interest rates news' },
+    { name: 'Inflation (CPI/PPI)', query: 'CPI inflation report news' },
+    { name: 'Jobs & Economy', query: 'Jobs report unemployment economy news' },
+    { name: 'Earnings Season', query: 'Stock market earnings season news' },
+    { name: 'Global Markets', query: 'Global economic markers news' }
   ];
 
   try {
-    const promises = influencers.map(async (inf) => {
-      const res = await yahooFinance.search(inf.query, { newsCount: 3 });
+    const promises = categories.map(async (cat) => {
+      const res = await yahooFinance.search(cat.query, { newsCount: 3 });
       return {
-        name: inf.name,
+        name: cat.name,
         news: res.news || []
       };
     });
 
     return await Promise.all(promises);
   } catch (error) {
-    console.error("Error fetching influencer updates:", error);
+    console.error("Error fetching economic events:", error);
     return [];
   }
 };
