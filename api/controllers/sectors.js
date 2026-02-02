@@ -1,4 +1,4 @@
-import { searchSymbol } from './lib/yahooFinance.js';
+import { getSectorPerformance } from '../lib/yahooFinance.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -10,17 +10,11 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    const { q } = req.query;
-
-    if (!q) {
-        return res.status(400).json({ error: 'Query parameter "q" is required' });
-    }
-
     try {
-        const results = await searchSymbol(q);
-        res.status(200).json(results);
+        const sectors = await getSectorPerformance();
+        res.status(200).json(sectors);
     } catch (error) {
-        console.error('Search error:', error);
+        console.error('Error fetching sectors:', error);
         res.status(500).json({ error: error.message });
     }
 }

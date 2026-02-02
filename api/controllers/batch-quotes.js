@@ -1,5 +1,5 @@
-import { getStockQuote, getHistoricalData, getSectorComparison } from './lib/yahooFinance.js';
-import { analyzeStock } from './lib/technicalAnalysis.js';
+import { getStockQuote, getHistoricalData, getSectorComparison } from '../lib/yahooFinance.js';
+import { analyzeStock } from '../lib/technicalAnalysis.js';
 
 export default async function handler(req, res) {
     // CORS headers

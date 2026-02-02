@@ -1,5 +1,5 @@
-import { getMarketNews, getEconomicEvents, getSocialSentiment, getInnovationNews } from './lib/yahooFinance.js';
-import { generateMarketSummary } from './lib/aiSummary.js';
+import { getMarketNews, getEconomicEvents, getSocialSentiment, getInnovationNews } from '../lib/yahooFinance.js';
+import { generateMarketSummary } from '../lib/aiSummary.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);

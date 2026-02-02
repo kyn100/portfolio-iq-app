@@ -2,9 +2,9 @@ import {
     getPortfolio,
     addToPortfolio,
     removeFromPortfolio
-} from './lib/db.js';
-import { getStockQuote, getHistoricalData, getSectorComparison, getNews, getAlternatives } from './lib/yahooFinance.js';
-import { analyzeStock } from './lib/technicalAnalysis.js';
+} from '../lib/db.js';
+import { getStockQuote, getHistoricalData, getSectorComparison, getNews, getAlternatives } from '../lib/yahooFinance.js';
+import { analyzeStock } from '../lib/technicalAnalysis.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
