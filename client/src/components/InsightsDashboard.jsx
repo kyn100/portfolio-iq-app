@@ -52,91 +52,114 @@ const InsightsDashboard = () => {
         // Case 1: Error or Loading (String)
         if (typeof summaryData === 'string' || !summaryData) {
             return (
-                <div className="text-blue-50 leading-relaxed font-medium whitespace-pre-line">
-                    {summaryData || "Loading market intelligence..."}
+                <div className="text-gray-400 leading-relaxed font-mono text-sm whitespace-pre-line p-4">
+                    {summaryData || "Initializing AI Neural Network..."}
                 </div>
             );
         }
 
         // Case 2: Structured JSON Data
-        const { sentiment, headline, points, ideas } = summaryData;
+        const { sentiment: marketSentiment, headline, points, ideas } = summaryData;
 
-        let sentimentColor = "bg-gray-100 text-gray-800";
-        if (sentiment === 'BULLISH') sentimentColor = "bg-green-100 text-green-800 border-green-200";
-        if (sentiment === 'BEARISH') sentimentColor = "bg-red-100 text-red-800 border-red-200";
+        let sentimentColor = "bg-gray-800 text-gray-300 border-gray-700";
+        if (marketSentiment === 'BULLISH') sentimentColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        if (marketSentiment === 'BEARISH') sentimentColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
 
         return (
-            <div className="space-y-6">
-                {/* Header & Main Sentiment */}
-                <div className="flex items-start gap-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sentimentColor} shadow-sm whitespace-nowrap mt-1`}>
-                        {sentiment}
-                    </span>
-                    <h3 className="text-xl font-bold text-white leading-tight">
+            <div className="flex flex-col gap-8">
+                {/* Header Section */}
+                <div className="border-b border-white/10 pb-6">
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sentimentColor} tracking-wider uppercase shadow-inner`}>
+                            {marketSentiment}
+                        </span>
+                        <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                            LIVE ANALYSIS
+                        </span>
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                         {headline}
                     </h3>
                 </div>
 
-                {/* Key Drivers */}
-                <div>
-                    <h4 className="text-xs font-bold text-blue-200 uppercase tracking-wider mb-2 flex items-center gap-1">
-                        Analysis Points
-                    </h4>
-                    <ul className="space-y-2">
-                        {(points || []).map((point, idx) => (
-                            <li key={idx} className="flex items-start gap-3 bg-white/10 p-2.5 rounded-lg backdrop-blur-sm hover:bg-white/20 transition-all">
-                                <div className="min-w-[20px] h-[20px] flex items-center justify-center rounded-full bg-blue-500 text-white shadow-sm mt-0.5">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <span className="text-blue-50 text-sm font-medium leading-snug">{point}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                {/* Future Opportunities (New Ideas) */}
-                {ideas && ideas.length > 0 && (
-                    <div className="pt-4 border-t border-white/10">
-                        <h4 className="text-xs font-bold text-yellow-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                    {/* Left Col: Analysis Points */}
+                    <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2 mb-4">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            Emerging Opportunities
+                            Key Market Drivers
                         </h4>
-                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {ideas.map((idea, idx) => (
-                                <li key={idx} className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 p-3 rounded-lg text-sm text-yellow-50 font-medium leading-snug">
-                                    {idea}
+                        <ul className="space-y-4">
+                            {(points || []).map((point, idx) => (
+                                <li key={idx} className="group flex items-start gap-4">
+                                    <div className="min-w-[24px] h-[24px] flex items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors mt-0.5">
+                                        <span className="text-xs font-bold font-mono">{idx + 1}</span>
+                                    </div>
+                                    <span className="text-gray-300 text-sm leading-relaxed group-hover:text-white transition-colors">{point}</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
-                )}
+
+                    {/* Right Col: Future Ideas (Card Style) */}
+                    <div className="bg-gradient-to-br from-white/5 to-transparent rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-3 opacity-10">
+                            <svg className="w-24 h-24 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" /></svg>
+                        </div>
+
+                        <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2 mb-6 relative z-10">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Innovation Signals
+                        </h4>
+
+                        <ul className="space-y-4 relative z-10">
+                            {(ideas || []).map((idea, idx) => (
+                                <li key={idx} className="flex gap-3">
+                                    <svg className="w-5 h-5 text-amber-500/50 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span className="text-amber-100/80 text-sm font-medium leading-snug hover:text-amber-100 transition-colors">
+                                        {idea}
+                                    </span>
+                                </li>
+                            ))}
+                            {(!ideas || ideas.length === 0) && <li className="text-gray-500 text-sm italic">No breakthrough signals detected today.</li>}
+                        </ul>
+                    </div>
+                </div>
             </div>
         );
     };
 
     return (
         <div className="space-y-8">
-            {/* AI Market Briefing */}
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-xl shadow-md text-white border border-blue-500/30 ring-1 ring-white/10">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 opacity-75 text-xs font-bold tracking-widest uppercase">
-                        <svg className="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        AI Market Intelligence
-                    </div>
-                    {lastUpdated && (
-                        <div className="text-xs text-blue-200/60 font-medium">
-                            Updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                    )}
-                </div>
+            {/* AI Market Briefing - Dark Card */}
+            <div className="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden relative">
+                {/* Decorative Gradient Blob */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
-                {renderContent()}
+                <div className="p-8 relative z-10">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-2 opacity-60 text-xs font-bold tracking-widest uppercase text-blue-200">
+                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                            PorfolioIQ AI Core
+                        </div>
+                        {lastUpdated && (
+                            <div className="text-[10px] text-slate-500 font-mono border border-slate-800 px-2 py-1 rounded bg-slate-950">
+                                UPDATED: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        )}
+                    </div>
+
+                    {renderContent()}
+                </div>
             </div>
 
             {/* Economic News Section */}
