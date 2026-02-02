@@ -26,7 +26,7 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
 
         const prompt = `
         You are an expert financial analyst. 
-        Analyze the following recent market news headlines and economic events.
+        Analyze the following recent market news headlines and economic events to determine the current market sentiment.
         
         HEADLINES:
         ${newsContext}
@@ -34,10 +34,10 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
         ECONOMIC EVENTS:
         ${eventsContext}
 
-        Task: Write a concise, professional "Daily Market Briefing" (max 3-4 bullet points).
-        Focus on the biggest drivers: Inflation/Fed, Market Sentiment, and Major sector moves.
-        Do not use markdown formatting like **bold** just use plain text or simple bullets.
-        Start with a brief 1-sentence overview.
+        Task: Produce a "Market Sentiment Report".
+        1. Classify the overall sentiment as **BULLISH**, **BEARISH**, or **NEUTRAL** (in bold).
+        2. Provide 3 concise bullet points explaining the key drivers (Fed, Earnings, Geopolitics).
+        3. Keep it under 100 words total.
         `;
 
         const result = await model.generateContent(prompt);
