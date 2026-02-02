@@ -476,15 +476,27 @@ const detectTrendTurning = async (symbol, sectorName) => {
     let turningDirection = null; // 'bullish' or 'bearish'
     let strength = 0;
 
+    // Context: Trend Direction
+    const isUptrend = sma20 > sma50;
+    const isDowntrend = sma20 < sma50;
+
     // 1. Golden Cross / Death Cross Detection (10/20 or 20/50)
     if (prevSma10 && prevSma20 && sma10 && sma20) {
       if (prevSma10 < prevSma20 && sma10 > sma20) {
-        signals.push({ type: 'Golden Cross (10/20)', description: '10-day MA crossed above 20-day MA' });
+        if (isUptrend) {
+          signals.push({ type: 'Momentum Alignment', description: 'Short-term momentum realigning with long-term uptrend' });
+        } else {
+          signals.push({ type: 'Golden Cross (10/20)', description: '10-day MA crossed above 20-day MA' });
+        }
         turningDirection = 'bullish';
         strength += 2;
       }
       if (prevSma10 > prevSma20 && sma10 < sma20) {
-        signals.push({ type: 'Death Cross (10/20)', description: '10-day MA crossed below 20-day MA' });
+        if (isDowntrend) {
+          signals.push({ type: 'Momentum Alignment', description: 'Short-term momentum realigning with downtrend' });
+        } else {
+          signals.push({ type: 'Death Cross (10/20)', description: '10-day MA crossed below 20-day MA' });
+        }
         turningDirection = 'bearish';
         strength += 2;
       }
@@ -506,18 +518,23 @@ const detectTrendTurning = async (symbol, sectorName) => {
     // 2. RSI Extreme Reversal (with Price Confirmation)
     if (rsi < 30) {
       if (todayChange > 0) {
-        signals.push({ type: 'RSI Reversal', description: `RSI Oversold (${rsi.toFixed(1)}) confirmed by price rebound (+${todayChange.toFixed(2)}%)` });
+        const type = isUptrend ? 'Dip Recovery' : 'RSI Reversal';
+        const desc = isUptrend
+          ? `Price rebounding from oversold levels in an uptrend (Buy the Dip)`
+          : `RSI Oversold confirmed by price rebound`;
+
+        signals.push({ type, description: desc });
         if (!turningDirection) turningDirection = 'bullish';
         strength += 2;
       } else {
-        signals.push({ type: 'Deep Oversold', description: `RSI at ${rsi.toFixed(1)} describes oversold conditions (Monitoring for reversal)` });
-        // Mark as neutral/watch unless other signals override
+        signals.push({ type: 'Deep Oversold', description: `RSI at ${rsi.toFixed(1)} describes oversold conditions (Monitoring)` });
         if (!turningDirection) turningDirection = 'neutral';
         strength += 0.5;
       }
     } else if (rsi > 70) {
       if (todayChange < 0) {
-        signals.push({ type: 'RSI Trend Exhaustion', description: `RSI Overbought (${rsi.toFixed(1)}) confirmed by pullback (${todayChange.toFixed(2)}%)` });
+        const type = isDowntrend ? 'Trend Resume (Down)' : 'RSI Trend Exhaustion';
+        signals.push({ type, description: `RSI Overbought confirmed by pullback` });
         if (!turningDirection) turningDirection = 'bearish';
         strength += 2;
       } else {
@@ -527,24 +544,43 @@ const detectTrendTurning = async (symbol, sectorName) => {
       }
     }
 
-    // 3. Momentum Divergence (short-term vs long-term)
+    // 3. Momentum Divergence
     if (oneWeekChange > 3 && oneMonthChange < 0) {
-      signals.push({ type: 'Momentum Shift Up', description: 'Strong weekly gain despite negative month - reversal starting' });
+      signals.push({ type: 'Momentum Shift Up', description: 'Strong weekly gain recovering from negative month' });
       if (!turningDirection) turningDirection = 'bullish';
       strength += 2;
     } else if (oneWeekChange < -3 && oneMonthChange > 0) {
-      signals.push({ type: 'Momentum Shift Down', description: 'Sudden weekly drop after positive month - trend breaking' });
+      signals.push({ type: 'Momentum Shift Down', description: 'Sudden weekly drop breaking monthly uptrend' });
       if (!turningDirection) turningDirection = 'bearish';
       strength += 2;
     }
 
     // 4. Price vs MA Breakout
-    if (currentPrice > sma20 && closes[closes.length - 6] < calcSMA(closes.slice(0, -5), 20)) {
-      signals.push({ type: 'Breakout Above 20-MA', description: 'Price broke above 20-day moving average' });
+    // We calculate approx previous MA. For simplicity, assume MA matched trend or calculate properly?
+    // We have closes. 
+    const prevMA20Val = calcSMA(closes.slice(0, -5), 20); // 5 days ago? 
+    // Using 6 days ago price closes[closes.length-6] vs MA then.
+    // Ideally we check if it crossed YESTERDAY or TODAY.
+    // If current > SMA20 and PrevClose < SMA20?
+    // Let's use PREVIOUS DAY CLOSE to be accurate.
+    const prevClose = closes[closes.length - 2];
+    // SMA20 yesterday approx? 
+    // Let's stick to the simpler "Current vs Previous Week" logic used before:
+    // closes[closes.length - 6] is 1 week ago.
+    if (currentPrice > sma20 && closes[closes.length - 6] < prevMA20Val) {
+      if (isUptrend) {
+        signals.push({ type: 'Trend Continuation', description: 'Price reclaimed 20-day MA, confirming uptrend' });
+      } else {
+        signals.push({ type: 'Breakout Above 20-MA', description: 'Price broke above 20-day MA - potential reversal' });
+      }
       if (!turningDirection) turningDirection = 'bullish';
       strength += 1;
-    } else if (currentPrice < sma20 && closes[closes.length - 6] > calcSMA(closes.slice(0, -5), 20)) {
-      signals.push({ type: 'Breakdown Below 20-MA', description: 'Price broke below 20-day moving average' });
+    } else if (currentPrice < sma20 && closes[closes.length - 6] > prevMA20Val) {
+      if (isDowntrend) {
+        signals.push({ type: 'Trend Continuation (Down)', description: 'Price fell back below 20-day MA, resuming downtrend' });
+      } else {
+        signals.push({ type: 'Breakdown Below 20-MA', description: 'Price broke below 20-day MA - potential reversal' });
+      }
       if (!turningDirection) turningDirection = 'bearish';
       strength += 1;
     }
