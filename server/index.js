@@ -6,6 +6,8 @@ import portfolioRouter from './routes/portfolio.js';
 import watchlistRouter from './routes/watchlist.js';
 import sectorsRouter from './routes/sectors.js';
 import insightsRouter from './routes/insights.js';
+import batchQuotesRouter from './routes/batchQuotes.js';
+import searchRouter from './routes/search.js';
 import trendAlertsRouter from './routes/trendAlerts.js';
 
 const app = express();
@@ -22,6 +24,8 @@ app.use('/api/watchlist', watchlistRouter);
 app.use('/api/sectors', sectorsRouter);
 app.use('/api/insights', insightsRouter);
 app.use('/api/trend-alerts', trendAlertsRouter);
+app.use('/api/batch-quotes', batchQuotesRouter);
+app.use('/api/search', searchRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

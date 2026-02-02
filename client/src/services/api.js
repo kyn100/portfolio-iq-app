@@ -229,3 +229,24 @@ export const getStockData = async (symbol) => {
   if (!response.ok) throw new Error('Failed to fetch stock data');
   return response.json();
 };
+
+export const searchStocks = async (query) => {
+  // Use Vercel API for search
+  // Assuming we don't have a dedicated search endpoint, we might need one.
+  // Or if getting single stock is what we mean.
+  // Actually, Vercel function /api/stocks/[symbol] fetches full data.
+  // But usually search needs a dedicated endpoint. 
+  // Let's implement a simple pass-through to Yahoo Finance search if we have it, 
+  // OR just assume exact match search for now similar to getStockData if no search endpoint exists.
+
+  // Wait, the previous api.js had:
+  // fetch(`${API_BASE}/stocks/search?q=${encodeURIComponent(query)}`)
+  // Does /api/stocks/search exist? 
+  // I only created /api/stocks/[symbol].js
+
+  // Let's create a search endpoint or mock it.
+  // For now, let's just create the function to fail gracefully or try to hit a new endpoint.
+  const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+  if (!response.ok) throw new Error('Failed to search stocks');
+  return response.json();
+};

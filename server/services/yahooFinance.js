@@ -289,8 +289,8 @@ export const getStockQuote = async (symbol) => {
       symbol: meta.symbol,
       name: quoteData?.longName || meta.shortName || meta.longName || symbol,
       price: meta.regularMarketPrice,
-      change: meta.regularMarketPrice - meta.chartPreviousClose,
-      changePercent: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100,
+      change: quoteData?.regularMarketChange || (meta.regularMarketPrice - meta.regularMarketPreviousClose),
+      changePercent: quoteData?.regularMarketChangePercent || ((meta.regularMarketPrice - meta.regularMarketPreviousClose) / meta.regularMarketPreviousClose) * 100,
       high: meta.regularMarketDayHigh,
       low: meta.regularMarketDayLow,
       open: quotes[quotes.length - 1]?.open,
@@ -894,7 +894,8 @@ export const searchSymbol = async (query) => {
 
 export const getMarketNews = async () => {
   try {
-    const result = await yahooFinance.search('economy stock market', { newsCount: 8 });
+    // Add "today" or "latest" to try and influence recency
+    const result = await yahooFinance.search('stock market news today', { newsCount: 10 });
     return result.news || [];
   } catch (error) {
     console.error("Error fetching market news:", error);
@@ -904,11 +905,11 @@ export const getMarketNews = async () => {
 
 export const getInfluencerUpdates = async () => {
   const influencers = [
-    { name: 'Warren Buffett', query: 'Warren Buffett' },
-    { name: 'Ray Dalio', query: 'Ray Dalio' },
-    { name: 'Jerome Powell', query: 'Jerome Powell' },
-    { name: 'Michael Burry', query: 'Michael Burry' },
-    { name: 'Elon Musk', query: 'Elon Musk' }
+    { name: 'Warren Buffett', query: 'Warren Buffett news' },
+    { name: 'Ray Dalio', query: 'Ray Dalio news' },
+    { name: 'Jerome Powell', query: 'Fed Chair Powell news' },
+    { name: 'Michael Burry', query: 'Michael Burry news' },
+    { name: 'Elon Musk', query: 'Elon Musk business news' }
   ];
 
   try {
@@ -929,13 +930,17 @@ export const getInfluencerUpdates = async () => {
 
 export const getSocialSentiment = async () => {
   try {
-    const queries = ['market sentiment', 'wallstreetbets', 'reddit stocks', 'retail investor trends'];
-    const results = await Promise.all(queries.map(q => yahooFinance.search(q, { newsCount: 2 })));
+    const queries = ['market sentiment news', 'meme stocks news', 'trending stocks news'];
+    const results = await Promise.all(queries.map(q => yahooFinance.search(q, { newsCount: 4 })));
 
     const allNews = results.flatMap(r => r.news || []);
+    // Deduplicate by link
     const uniqueNews = Array.from(new Map(allNews.map(item => [item.link, item])).values());
 
-    return uniqueNews.slice(0, 6);
+    // Sort by provider publish time if available (descending)
+    uniqueNews.sort((a, b) => (b.providerPublishTime || 0) - (a.providerPublishTime || 0));
+
+    return uniqueNews.slice(0, 8);
   } catch (error) {
     console.error("Error fetching social sentiment:", error);
     return [];
