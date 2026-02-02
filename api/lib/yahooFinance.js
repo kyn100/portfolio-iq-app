@@ -903,6 +903,25 @@ export const getMarketNews = async () => {
   }
 };
 
+export const getInnovationNews = async () => {
+  const queries = [
+    'Artificial Intelligence breakthrough news',
+    'Green energy innovation news',
+    'Biotech medical breakthrough news',
+    'Space technology news',
+    'Next gen battery technology news'
+  ];
+
+  try {
+    const promises = queries.map(q => yahooFinance.search(q, { newsCount: 2 }));
+    const results = await Promise.all(promises);
+    return results.flatMap(r => r.news || []);
+  } catch (error) {
+    console.error("Error fetching innovation news:", error);
+    return [];
+  }
+};
+
 export const getEconomicEvents = async () => {
   const categories = [
     { name: 'Federal Reserve & Rates', query: 'Federal Reserve interest rates news' },

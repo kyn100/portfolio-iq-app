@@ -45,16 +45,17 @@ const InsightsDashboard = () => {
         }
 
         // Case 2: Structured JSON Data
-        const { sentiment, headline, points } = summaryData;
+        const { sentiment, headline, points, ideas } = summaryData;
 
         let sentimentColor = "bg-gray-100 text-gray-800";
         if (sentiment === 'BULLISH') sentimentColor = "bg-green-100 text-green-800 border-green-200";
         if (sentiment === 'BEARISH') sentimentColor = "bg-red-100 text-red-800 border-red-200";
 
         return (
-            <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sentimentColor} shadow-sm`}>
+            <div className="space-y-6">
+                {/* Header & Main Sentiment */}
+                <div className="flex items-start gap-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sentimentColor} shadow-sm whitespace-nowrap mt-1`}>
                         {sentiment}
                     </span>
                     <h3 className="text-xl font-bold text-white leading-tight">
@@ -62,18 +63,43 @@ const InsightsDashboard = () => {
                     </h3>
                 </div>
 
-                <ul className="space-y-2 mt-3">
-                    {points.map((point, idx) => (
-                        <li key={idx} className="flex items-start gap-3 bg-white/10 p-2 rounded-lg backdrop-blur-sm hover:bg-white/20 transition-all">
-                            <div className="min-w-[24px] h-[24px] flex items-center justify-center rounded-full bg-blue-500 text-white shadow-sm mt-0.5">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <span className="text-blue-50 text-sm font-medium leading-snug">{point}</span>
-                        </li>
-                    ))}
-                </ul>
+                {/* Key Drivers */}
+                <div>
+                    <h4 className="text-xs font-bold text-blue-200 uppercase tracking-wider mb-2 flex items-center gap-1">
+                        Analysis Points
+                    </h4>
+                    <ul className="space-y-2">
+                        {(points || []).map((point, idx) => (
+                            <li key={idx} className="flex items-start gap-3 bg-white/10 p-2.5 rounded-lg backdrop-blur-sm hover:bg-white/20 transition-all">
+                                <div className="min-w-[20px] h-[20px] flex items-center justify-center rounded-full bg-blue-500 text-white shadow-sm mt-0.5">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span className="text-blue-50 text-sm font-medium leading-snug">{point}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* Future Opportunities (New Ideas) */}
+                {ideas && ideas.length > 0 && (
+                    <div className="pt-4 border-t border-white/10">
+                        <h4 className="text-xs font-bold text-yellow-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            Emerging Opportunities
+                        </h4>
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {ideas.map((idea, idx) => (
+                                <li key={idx} className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 p-3 rounded-lg text-sm text-yellow-50 font-medium leading-snug">
+                                    {idea}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
             </div>
         );
     };

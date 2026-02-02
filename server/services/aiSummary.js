@@ -3,13 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-export const generateMarketSummary = async (newsItems = [], events = []) => {
+export const generateMarketSummary = async (newsItems = [], events = [], innovations = []) => {
     if (!genAI) {
+        // Return string on error is okay, but JSON parsing in frontend will fail if not handled.
+        // Frontend handles string type gracefully.
         return "AI Market Summary unavailable. Please add GEMINI_API_KEY to your env variables.";
-    }
-
-    if ((!newsItems || newsItems.length === 0) && (!events || events.length === 0)) {
-        return "No sufficient news data available to generate a summary.";
     }
 
     try {
@@ -24,9 +22,12 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
             return `Category: ${cat.name}\n${catNews}`;
         }).join('\n\n');
 
+        // Prepare context from innovations
+        const innovationContext = (innovations || []).slice(0, 10).map(n => `- ${n.title} (${n.publisher})`).join('\n');
+
         const prompt = `
-        You are an expert financial analyst. 
-        Analyze the following recent market news headlines and economic events to determine the current market sentiment.
+        You are an expert financial analyst and futurist. 
+        Analyze the following recent market news, economic events, and innovation trends.
         
         HEADLINES:
         ${newsContext}
@@ -34,19 +35,23 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
         ECONOMIC EVENTS:
         ${eventsContext}
 
-        Task: Produce a "Market Sentiment Report" in strictly valid JSON format.
-        Do not include any markdown formatting or explanation outside the JSON.
+        INNOVATION TRENDS:
+        ${innovationContext}
+
+        Task: Produce a "Market Sentiment & Future Trends Report" in strictly valid JSON format.
         
         JSON Structure:
         {
             "sentiment": "BULLISH" | "BEARISH" | "NEUTRAL",
             "headline": "A short, punchy 1-sentence summary of the market mood.",
             "points": [
-                "Key driver 1",
-                "Key driver 2",
-                "Key driver 3",
-                "Key driver 4",
-                "Key driver 5"
+                "Key market driver 1",
+                "Key market driver 2",
+                "Key market driver 3"
+            ],
+            "ideas": [
+                "Identify 1 great new emerging idea/trend from the Innovation News",
+                "Identify a second emerging idea or technology breakdown"
             ]
         }
         `;
@@ -65,7 +70,8 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
             return {
                 sentiment: "NEUTRAL",
                 headline: "Market analysis available (Parsing Error)",
-                points: ["Unable to format analysis points."]
+                points: ["Unable to format analysis points."],
+                ideas: []
             };
         }
 

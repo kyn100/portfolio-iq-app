@@ -1,4 +1,4 @@
-import { getMarketNews, getEconomicEvents, getSocialSentiment } from './lib/yahooFinance.js';
+import { getMarketNews, getEconomicEvents, getSocialSentiment, getInnovationNews } from './lib/yahooFinance.js';
 import { generateMarketSummary } from './lib/aiSummary.js';
 
 export default async function handler(req, res) {
@@ -13,14 +13,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        const [news, events, sentiment] = await Promise.all([
+        const [news, events, sentiment, innovations] = await Promise.all([
             getMarketNews(),
             getEconomicEvents(),
-            getSocialSentiment()
+            getSocialSentiment(),
+            getInnovationNews()
         ]);
 
         // Generate AI Summary
-        const summary = await generateMarketSummary(news, events);
+        const summary = await generateMarketSummary(news, events, innovations);
 
         res.status(200).json({
             marketNews: news,
