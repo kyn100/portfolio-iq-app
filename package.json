@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Smart portfolio monitoring app with technical analysis and Buy/Hold/Sell recommendations",
   "type": "module",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
