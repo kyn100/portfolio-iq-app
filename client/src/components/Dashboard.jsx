@@ -148,27 +148,27 @@ const Dashboard = ({ session }) => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Tabs */}
-        <div className="flex mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+        <div className="flex overflow-x-auto mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-1 touch-pan-x scrollbar-hide">
           <button
             onClick={() => setActiveTab('portfolio')}
-            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'portfolio'
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'portfolio'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Portfolio ({portfolioItems.length})
           </button>
           <button
             onClick={() => setActiveTab('watchlist')}
-            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'watchlist'
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'watchlist'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
@@ -176,36 +176,36 @@ const Dashboard = ({ session }) => {
           </button>
           <button
             onClick={() => setActiveTab('sectors')}
-            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'sectors'
+            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'sectors'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             Market Sectors
           </button>
           <button
             onClick={() => setActiveTab('trends')}
-            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'trends'
+            className={`flex-1 min-w-[130px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'trends'
               ? 'bg-purple-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
             Trend Alerts
           </button>
           <button
             onClick={() => setActiveTab('insights')}
-            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'insights'
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'insights'
               ? 'bg-blue-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
             Insights
@@ -237,8 +237,8 @@ const Dashboard = ({ session }) => {
 
               {/* Money Out Card (Current Value) */}
               <div className={`p-6 rounded-2xl border shadow-sm relative overflow-hidden group transition-all ${summary.totalGainLoss >= 0
-                  ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100'
-                  : 'bg-gradient-to-br from-rose-50 to-white border-rose-100'
+                ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100'
+                : 'bg-gradient-to-br from-rose-50 to-white border-rose-100'
                 }`}>
                 <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity ${summary.totalGainLoss >= 0 ? 'text-emerald-900' : 'text-rose-900'}`}>
                   <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -256,8 +256,8 @@ const Dashboard = ({ session }) => {
                       </h3>
                     </div>
                     <div className={`px-3 py-1.5 rounded-lg text-sm font-bold border ${summary.totalGainLoss >= 0
-                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                        : 'bg-rose-100 text-rose-700 border-rose-200'
+                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-100 text-rose-700 border-rose-200'
                       }`}>
                       {summary.totalGainLossPercent >= 0 ? '+' : ''}{summary.totalGainLossPercent?.toFixed(2)}%
                     </div>
