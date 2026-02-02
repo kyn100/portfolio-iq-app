@@ -46,6 +46,6 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
 
     } catch (error) {
         console.error("AI Summary Error:", error);
-        return "Unable to generate market summary at this time.";
+        return `Unable to generate market summary (Error: ${error.message || "Unknown Error"}). Please verify your API Key permissions.`;
     }
 };
