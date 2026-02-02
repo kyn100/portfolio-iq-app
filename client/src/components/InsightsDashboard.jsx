@@ -31,23 +31,65 @@ const InsightsDashboard = () => {
     const news = data.marketNews || [];
     const economicEvents = data.economicEvents || [];
     const sentiment = data.socialSentiment || [];
-    const summary = data.marketSummary || "Loading briefing...";
+    const summaryData = data.marketSummary; // Can be string (error) or object (data)
+
+    // Helper to render AI Card content
+    const renderContent = () => {
+        // Case 1: Error or Loading (String)
+        if (typeof summaryData === 'string' || !summaryData) {
+            return (
+                <div className="text-blue-50 leading-relaxed font-medium whitespace-pre-line">
+                    {summaryData || "Loading market intelligence..."}
+                </div>
+            );
+        }
+
+        // Case 2: Structured JSON Data
+        const { sentiment, headline, points } = summaryData;
+
+        let sentimentColor = "bg-gray-100 text-gray-800";
+        if (sentiment === 'BULLISH') sentimentColor = "bg-green-100 text-green-800 border-green-200";
+        if (sentiment === 'BEARISH') sentimentColor = "bg-red-100 text-red-800 border-red-200";
+
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${sentimentColor} shadow-sm`}>
+                        {sentiment}
+                    </span>
+                    <h3 className="text-xl font-bold text-white leading-tight">
+                        {headline}
+                    </h3>
+                </div>
+
+                <ul className="space-y-2 mt-3">
+                    {points.map((point, idx) => (
+                        <li key={idx} className="flex items-start gap-3 bg-white/10 p-2 rounded-lg backdrop-blur-sm hover:bg-white/20 transition-all">
+                            <div className="min-w-[24px] h-[24px] flex items-center justify-center rounded-full bg-blue-500 text-white shadow-sm mt-0.5">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <span className="text-blue-50 text-sm font-medium leading-snug">{point}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-8">
             {/* AI Market Briefing */}
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-xl shadow-md text-white">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-xl shadow-md text-white border border-blue-500/30 ring-1 ring-white/10">
+                <div className="flex items-center gap-2 mb-4 opacity-75 text-xs font-bold tracking-widest uppercase">
+                    <svg className="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Daily Market Briefing (AI)
-                </h2>
-                <div className="prose prose-invert max-w-none">
-                    <div className="whitespace-pre-line text-blue-50 leading-relaxed font-medium">
-                        {summary}
-                    </div>
+                    AI Market Intelligence
                 </div>
+
+                {renderContent()}
             </div>
 
             {/* Economic News Section */}

@@ -33,15 +33,40 @@ export const generateMarketSummary = async (newsItems = [], events = []) => {
         ECONOMIC EVENTS:
         ${eventsContext}
 
-        Task: Produce a "Market Sentiment Report".
-        1. Classify the overall sentiment as **BULLISH**, **BEARISH**, or **NEUTRAL** (in bold).
-        2. Provide 3 concise bullet points explaining the key drivers (Fed, Earnings, Geopolitics).
-        3. Keep it under 100 words total.
+        Task: Produce a "Market Sentiment Report" in strictly valid JSON format.
+        Do not include any markdown formatting or explanation outside the JSON.
+        
+        JSON Structure:
+        {
+            "sentiment": "BULLISH" | "BEARISH" | "NEUTRAL",
+            "headline": "A short, punchy 1-sentence summary of the market mood.",
+            "points": [
+                "Key driver 1",
+                "Key driver 2",
+                "Key driver 3",
+                "Key driver 4",
+                "Key driver 5"
+            ]
+        }
         `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        return response.text();
+        let text = response.text();
+
+        // Clean up markdown code blocks if present
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Failed to parse AI JSON:", text);
+            return {
+                sentiment: "NEUTRAL",
+                headline: "Market analysis available (Parsing Error)",
+                points: ["Unable to format analysis points."]
+            };
+        }
 
     } catch (error) {
         console.error("AI Summary Error:", error);
