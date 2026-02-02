@@ -16,45 +16,49 @@ router.post('/', async (req, res) => {
         // Limit batch size
         const batch = symbols.slice(0, 10);
 
-        // Fetch in parallel
-        const quotes = await Promise.all(
-            batch.map(async (symbol) => {
-                try {
-                    // Fetch all required data in parallel
-                    const [quote, historicalData] = await Promise.all([
-                        getStockQuote(symbol),
-                        getHistoricalData(symbol, '6mo')
-                    ]);
+        const quotes = [];
 
-                    // Run Analysis
-                    const analysis = analyzeStock(historicalData, quote);
+        // Process sequentially to be gentle on Yahoo API (avoid 429)
+        for (const symbol of batch) {
+            try {
+                // Fetch all required data in parallel (per stock)
+                const [quote, historicalData] = await Promise.all([
+                    getStockQuote(symbol),
+                    getHistoricalData(symbol, '6mo')
+                ]);
 
-                    // Get Sector Comparison
-                    let sectorComparison = null;
-                    if (quote.sector) {
-                        try {
-                            sectorComparison = await getSectorComparison(symbol, quote.sector);
-                        } catch (e) {
-                            console.warn(`Sector comparison failed for ${symbol}`);
-                        }
+                // Run Analysis
+                const analysis = analyzeStock(historicalData, quote);
+
+                // Get Sector Comparison
+                let sectorComparison = null;
+                if (quote.sector) {
+                    try {
+                        sectorComparison = await getSectorComparison(symbol, quote.sector);
+                    } catch (e) {
+                        // Ignore sector errors
                     }
-
-                    return {
-                        symbol: symbol.toUpperCase(),
-                        data: {
-                            ...quote,
-                            analysis,
-                            sectorComparison,
-                            historicalData: historicalData.slice(-30)
-                        },
-                        error: null
-                    };
-                } catch (e) {
-                    console.error(`Error fetching ${symbol}:`, e.message);
-                    return { symbol: symbol.toUpperCase(), data: null, error: e.message };
                 }
-            })
-        );
+
+                quotes.push({
+                    symbol: symbol.toUpperCase(),
+                    data: {
+                        ...quote,
+                        analysis,
+                        sectorComparison,
+                        historicalData: historicalData.slice(-30)
+                    },
+                    error: null
+                });
+
+            } catch (e) {
+                console.error(`Error fetching ${symbol}:`, e.message);
+                quotes.push({ symbol: symbol.toUpperCase(), data: null, error: e.message });
+            }
+
+            // Small delay between stocks
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
 
         res.json(quotes);
     } catch (error) {

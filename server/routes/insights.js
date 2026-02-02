@@ -12,9 +12,9 @@ router.get('/', async (req, res) => {
         ]);
 
         res.json({
-            news,
-            influencers,
-            sentiment
+            marketNews: news,
+            influencerUpdates: influencers,
+            socialSentiment: sentiment
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
