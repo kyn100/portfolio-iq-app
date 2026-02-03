@@ -96,26 +96,26 @@ export const generateStockRecommendations = async (marketData) => {
         - **Technical Alerts**: ${marketData.trends.slice(0, 5).map(t => `${t.etf} (${t.direction})`).join(', ')}
 
         ### Task
-        Identify 10 specific stocks (US Equities) that align with these trends.
+        Identify 10 specific stocks (US Equities/ETFs) that align with these trends.
         Split them into two categories:
         
-        1. **Immediate Opportunities** (5 Stocks): High-conviction setups where price action and narrative align RIGHT NOW (e.g., Breakouts, Reversals, Momentum).
-        2. **Radar Screen** (5 Stocks): Stocks with huge potential but are either overextended (waiting for pullback) or consolidating (waiting for breakout).
+        1. **Immediate Opportunities** (5 Stocks): High-conviction setups active RIGHT NOW.
+        2. **Radar Screen** (5 Stocks): Stocks setting up for a move.
 
         ### Output Format (JSON ONLY)
         {
             "immediate": [
-                { "symbol": "AAPL", "name": "Apple Inc", "price": 0, "reason": "Brief technical + fundamental rationale", "action": "But" }
+                { "symbol": "AAPL", "name": "Apple Inc", "price": 0, "reason": "Breaking out of cup-and-handle pattern on earnings optimism", "action": "Buy" }
             ],
             "watchlist": [
-                { "symbol": "TSLA", "name": "Tesla", "price": 0, "reason": "Waiting for support test at $200", "action": "Wait" }
+                { "symbol": "TSLA", "name": "Tesla", "price": 0, "reason": "Oversold at 200DMA support, watching for reversal candle", "action": "Wait" }
             ]
         }
         
         RULES:
-        - Symbols must be valid US tickers.
-        - "reason" must be punchy and specific (max 15 words).
-        - "price" can be 0 (frontend will fetch real-time).
+        - **Reasoning Must Be Clear**: Explain SPECIFICALLY why this stock is chosen (Technical pattern, Catalyst, or Sector Theme). Avoid generic "Good potential".
+        - **Focus on Quality**: Prioritize liquid Large/Mid-cap stocks and major ETFs. slightly favor Sector Leaders.
+        - "price" can be 0.
         - Do not markdown the output. Return raw JSON.
         `;
 
