@@ -25,6 +25,8 @@ const Dashboard = ({ session }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio'); // 'portfolio' or 'watchlist'
 
+  const [lastRefreshed, setLastRefreshed] = useState(Date.now());
+
   const loadData = useCallback(async () => {
     try {
       setError(null);
@@ -48,6 +50,7 @@ const Dashboard = ({ session }) => {
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadData();
+    setLastRefreshed(Date.now()); // Trigger re-mount of child dashboards
     setRefreshing(false);
   };
 
@@ -388,17 +391,17 @@ const Dashboard = ({ session }) => {
 
         {/* Sectors Tab Content */}
         {activeTab === 'sectors' && (
-          <SectorDashboard />
+          <SectorDashboard key={lastRefreshed} />
         )}
 
         {/* Insights Tab Content */}
         {activeTab === 'insights' && (
-          <InsightsDashboard />
+          <InsightsDashboard key={lastRefreshed} />
         )}
 
         {/* Trend Alerts Tab Content */}
         {activeTab === 'trends' && (
-          <TrendAlertsDashboard />
+          <TrendAlertsDashboard key={lastRefreshed} />
         )}
       </main>
 
