@@ -988,12 +988,15 @@ export const getInnovationNews = async () => {
 };
 
 export const getEconomicEvents = async () => {
+  const date = new Date();
+  const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const categories = [
-    { name: 'Federal Reserve & Rates', query: 'Federal Reserve interest rates news' },
-    { name: 'Inflation (CPI/PPI)', query: 'CPI inflation report news' },
-    { name: 'Jobs & Economy', query: 'Jobs report unemployment economy news' },
-    { name: 'Earnings Season', query: 'Stock market earnings season news' },
-    { name: 'Global Markets', query: 'Global economic markers news' }
+    { name: 'Federal Reserve & Rates', query: `Federal Reserve interest rates ${monthYear}` },
+    { name: 'Inflation (CPI/PPI)', query: `CPI inflation report ${monthYear}` },
+    { name: 'Jobs & Economy', query: `Jobs report unemployment ${monthYear}` },
+    { name: 'Earnings Season', query: `Quarterly earnings updates ${monthYear}` },
+    { name: 'Global Economy', query: `Global economic outlook ${monthYear}` }
   ];
 
   try {
