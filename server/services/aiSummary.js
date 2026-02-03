@@ -45,11 +45,17 @@ export const generateMarketSummary = async (newsItems = [], events = [], innovat
                 "Key market driver 2",
                 "Key market driver 3"
             ],
+            "macro": {
+                 "summary": "Brief synthesis of Growth, Inflation, and Rates outlook (approx 20 words).",
+                 "signals": ["Signal 1 (e.g. Fed Policy)", "Signal 2 (e.g. GDP Trend)"]
+            },
             "ideas": [
                 "Identify 1 great new emerging idea/trend from the Innovation News",
                 "Identify a second emerging idea or technology breakdown"
             ]
         }
+        
+        Style: Institutional, forward-looking, high-conviction.
         `;
 
         const result = await model.generateContent(prompt);
@@ -67,6 +73,7 @@ export const generateMarketSummary = async (newsItems = [], events = [], innovat
                 sentiment: "NEUTRAL",
                 headline: "Market analysis available (Parsing Error)",
                 points: ["Unable to format analysis points."],
+                macro: { summary: "Data unavailable", signals: [] },
                 ideas: []
             };
         }

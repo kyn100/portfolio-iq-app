@@ -59,7 +59,7 @@ const InsightsDashboard = () => {
         }
 
         // Case 2: Structured JSON Data
-        const { sentiment: marketSentiment, headline, points, ideas } = summaryData;
+        const { sentiment: marketSentiment, headline, points, ideas, macro } = summaryData;
 
         let sentimentColor = "bg-gray-800 text-gray-300 border-gray-700";
         if (marketSentiment === 'BULLISH') sentimentColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
@@ -83,7 +83,7 @@ const InsightsDashboard = () => {
                     </h3>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Col: Analysis Points */}
                     <div className="space-y-4">
                         <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2 mb-4">
@@ -104,8 +104,34 @@ const InsightsDashboard = () => {
                         </ul>
                     </div>
 
+                    {/* Middle Col: Macro Outlook (NEW) */}
+                    <div className="bg-gradient-to-br from-white/5 to-transparent rounded-2xl p-6 border border-white/5 relative overflow-hidden flex flex-col">
+                        <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2 mb-6 relative z-10">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Global Macro Outlook
+                        </h4>
+
+                        <div className="relative z-10 flex-grow">
+                            <div className="mb-4">
+                                <p className="text-emerald-100/90 text-sm font-medium leading-relaxed italic border-l-2 border-emerald-500/50 pl-3">
+                                    "{macro?.summary || 'Analyzing global macro trends (Growth, Inflation, Rates)...'}"
+                                </p>
+                            </div>
+                            <ul className="space-y-3">
+                                {(macro?.signals || []).map((signal, idx) => (
+                                    <li key={idx} className="flex gap-2 items-start">
+                                        <span className="text-emerald-500 mt-1">•</span>
+                                        <span className="text-emerald-100/70 text-sm">{signal}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
                     {/* Right Col: Future Ideas (Card Style) */}
-                    <div className="bg-gradient-to-br from-white/5 to-transparent rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-white/5 to-transparent rounded-2xl p-6 border border-white/5 relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 p-3 opacity-10">
                             <svg className="w-24 h-24 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" /></svg>
                         </div>
@@ -117,7 +143,7 @@ const InsightsDashboard = () => {
                             Innovation Signals
                         </h4>
 
-                        <ul className="space-y-4 relative z-10">
+                        <ul className="space-y-4 relative z-10 flex-grow">
                             {(ideas || []).map((idea, idx) => (
                                 <li key={idx} className="flex gap-3">
                                     <svg className="w-5 h-5 text-amber-500/50 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
