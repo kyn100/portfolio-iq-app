@@ -943,19 +943,24 @@ export const searchSymbol = async (query) => {
 
 export const getMarketNews = async () => {
   try {
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    // Use a mix of broad market terms to ensure capture
-    // Searching for "Stock Market" + Date usually yields fresh results
-    const result = await yahooFinance.search(`stock market news ${dateStr}`, { newsCount: 10 });
+    // Strategy: Fetch news for major indices (S&P 500 and Nasdaq)
+    // This is more reliable than generic keyword searching
+    const [spy, qqq] = await Promise.all([
+      yahooFinance.search('SPY', { newsCount: 8 }),
+      yahooFinance.search('QQQ', { newsCount: 8 })
+    ]);
 
-    // Fallback if strict date returns nothing: just Month Year
-    if (!result.news || result.news.length < 3) {
-      const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-      const fallback = await yahooFinance.search(`market news ${monthYear}`, { newsCount: 10 });
-      return fallback.news || [];
-    }
-    return result.news || [];
+    const news1 = spy.news || [];
+    const news2 = qqq.news || [];
+
+    // Merge and Deduplicate
+    const allNews = [...news1, ...news2];
+    const uniqueNews = Array.from(new Map(allNews.map(item => [item.uuid || item.title, item])).values());
+
+    // Sort by recency (providerPublishTime is unix timestamp)
+    uniqueNews.sort((a, b) => (b.providerPublishTime || 0) - (a.providerPublishTime || 0));
+
+    return uniqueNews.slice(0, 12);
   } catch (error) {
     console.error("Error fetching market news:", error);
     return [];
