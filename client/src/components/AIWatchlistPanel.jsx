@@ -27,6 +27,19 @@ const AIWatchlistPanel = ({ onAdd }) => {
         </div>
     );
 
+    if (error) return (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8 text-center">
+            <p className="text-red-600 font-medium mb-2">Failed to generate recommendations</p>
+            <p className="text-red-500 text-sm mb-4">{error}</p>
+            <button
+                onClick={handleGenerate}
+                className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+            >
+                Try Again
+            </button>
+        </div>
+    );
+
     if (!data) return (
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-6 mb-8 text-white flex flex-col md:flex-row items-center justify-between shadow-lg">
             <div>
