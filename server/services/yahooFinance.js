@@ -119,7 +119,7 @@ const SECTOR_BENCHMARKS = {
   'Cybersecurity': 'HACK',
 
   // Healthcare Sub-sectors
-  'Biotech': 'IBB',
+  'Biotechnology': 'XBI',
 
   // Industrial Sub-sectors
   'Defence': 'ITA',
@@ -476,15 +476,27 @@ const detectTrendTurning = async (symbol, sectorName) => {
     let turningDirection = null; // 'bullish' or 'bearish'
     let strength = 0;
 
+    // Context: Trend Direction
+    const isUptrend = sma20 > sma50;
+    const isDowntrend = sma20 < sma50;
+
     // 1. Golden Cross / Death Cross Detection (10/20 or 20/50)
     if (prevSma10 && prevSma20 && sma10 && sma20) {
       if (prevSma10 < prevSma20 && sma10 > sma20) {
-        signals.push({ type: 'Golden Cross (10/20)', description: '10-day MA crossed above 20-day MA' });
+        if (isUptrend) {
+          signals.push({ type: 'Momentum Alignment', description: 'Short-term momentum realigning with long-term uptrend' });
+        } else {
+          signals.push({ type: 'Golden Cross (10/20)', description: '10-day MA crossed above 20-day MA' });
+        }
         turningDirection = 'bullish';
         strength += 2;
       }
       if (prevSma10 > prevSma20 && sma10 < sma20) {
-        signals.push({ type: 'Death Cross (10/20)', description: '10-day MA crossed below 20-day MA' });
+        if (isDowntrend) {
+          signals.push({ type: 'Momentum Alignment', description: 'Short-term momentum realigning with downtrend' });
+        } else {
+          signals.push({ type: 'Death Cross (10/20)', description: '10-day MA crossed below 20-day MA' });
+        }
         turningDirection = 'bearish';
         strength += 2;
       }
@@ -503,35 +515,72 @@ const detectTrendTurning = async (symbol, sectorName) => {
       }
     }
 
-    // 2. RSI Extreme Reversal
+    // 2. RSI Extreme Reversal (with Price Confirmation)
     if (rsi < 30) {
-      signals.push({ type: 'RSI Oversold', description: `RSI at ${rsi.toFixed(1)} - Potential bullish reversal` });
-      if (!turningDirection) turningDirection = 'bullish';
-      strength += 1;
+      if (todayChange > 0) {
+        const type = isUptrend ? 'Dip Recovery' : 'RSI Reversal';
+        const desc = isUptrend
+          ? `Price rebounding from oversold levels in an uptrend (Buy the Dip)`
+          : `RSI Oversold confirmed by price rebound`;
+
+        signals.push({ type, description: desc });
+        if (!turningDirection) turningDirection = 'bullish';
+        strength += 2;
+      } else {
+        signals.push({ type: 'Deep Oversold', description: `RSI at ${rsi.toFixed(1)} describes oversold conditions (Monitoring)` });
+        if (!turningDirection) turningDirection = 'neutral';
+        strength += 0.5;
+      }
     } else if (rsi > 70) {
-      signals.push({ type: 'RSI Overbought', description: `RSI at ${rsi.toFixed(1)} - Potential bearish reversal` });
-      if (!turningDirection) turningDirection = 'bearish';
-      strength += 1;
+      if (todayChange < 0) {
+        const type = isDowntrend ? 'Trend Resume (Down)' : 'RSI Trend Exhaustion';
+        signals.push({ type, description: `RSI Overbought confirmed by pullback` });
+        if (!turningDirection) turningDirection = 'bearish';
+        strength += 2;
+      } else {
+        signals.push({ type: 'Extreme Overbought', description: `RSI at ${rsi.toFixed(1)} indicates potential overheating` });
+        if (!turningDirection) turningDirection = 'neutral';
+        strength += 0.5;
+      }
     }
 
-    // 3. Momentum Divergence (short-term vs long-term)
+    // 3. Momentum Divergence
     if (oneWeekChange > 3 && oneMonthChange < 0) {
-      signals.push({ type: 'Momentum Shift Up', description: 'Strong weekly gain despite negative month - reversal starting' });
+      signals.push({ type: 'Momentum Shift Up', description: 'Strong weekly gain recovering from negative month' });
       if (!turningDirection) turningDirection = 'bullish';
       strength += 2;
     } else if (oneWeekChange < -3 && oneMonthChange > 0) {
-      signals.push({ type: 'Momentum Shift Down', description: 'Sudden weekly drop after positive month - trend breaking' });
+      signals.push({ type: 'Momentum Shift Down', description: 'Sudden weekly drop breaking monthly uptrend' });
       if (!turningDirection) turningDirection = 'bearish';
       strength += 2;
     }
 
     // 4. Price vs MA Breakout
-    if (currentPrice > sma20 && closes[closes.length - 6] < calcSMA(closes.slice(0, -5), 20)) {
-      signals.push({ type: 'Breakout Above 20-MA', description: 'Price broke above 20-day moving average' });
+    // We calculate approx previous MA. For simplicity, assume MA matched trend or calculate properly?
+    // We have closes. 
+    const prevMA20Val = calcSMA(closes.slice(0, -5), 20); // 5 days ago? 
+    // Using 6 days ago price closes[closes.length-6] vs MA then.
+    // Ideally we check if it crossed YESTERDAY or TODAY.
+    // If current > SMA20 and PrevClose < SMA20?
+    // Let's use PREVIOUS DAY CLOSE to be accurate.
+    const prevClose = closes[closes.length - 2];
+    // SMA20 yesterday approx? 
+    // Let's stick to the simpler "Current vs Previous Week" logic used before:
+    // closes[closes.length - 6] is 1 week ago.
+    if (currentPrice > sma20 && closes[closes.length - 6] < prevMA20Val) {
+      if (isUptrend) {
+        signals.push({ type: 'Trend Continuation', description: 'Price reclaimed 20-day MA, confirming uptrend' });
+      } else {
+        signals.push({ type: 'Breakout Above 20-MA', description: 'Price broke above 20-day MA - potential reversal' });
+      }
       if (!turningDirection) turningDirection = 'bullish';
       strength += 1;
-    } else if (currentPrice < sma20 && closes[closes.length - 6] > calcSMA(closes.slice(0, -5), 20)) {
-      signals.push({ type: 'Breakdown Below 20-MA', description: 'Price broke below 20-day moving average' });
+    } else if (currentPrice < sma20 && closes[closes.length - 6] > prevMA20Val) {
+      if (isDowntrend) {
+        signals.push({ type: 'Trend Continuation (Down)', description: 'Price fell back below 20-day MA, resuming downtrend' });
+      } else {
+        signals.push({ type: 'Breakdown Below 20-MA', description: 'Price broke below 20-day MA - potential reversal' });
+      }
       if (!turningDirection) turningDirection = 'bearish';
       strength += 1;
     }
@@ -710,7 +759,7 @@ const SECTOR_ALTERNATIVES = {
   'Cybersecurity': ['CRWD', 'PANW', 'FTNT', 'ZS', 'OKTA', 'NET', 'S'],
 
   // Healthcare Sub-sectors
-  'Biotech': ['AMGN', 'GILD', 'VRTX', 'REGN', 'BIIB', 'MRNA', 'BNTX', 'ILMN'],
+  'Biotechnology': ['AMGN', 'GILD', 'VRTX', 'REGN', 'BIIB', 'MRNA', 'BNTX', 'ILMN'],
 
   // Industrial Sub-sectors
   'Defence': ['LMT', 'RTX', 'NOC', 'GD', 'BA', 'LHX', 'HII', 'LDOS'],
@@ -894,8 +943,18 @@ export const searchSymbol = async (query) => {
 
 export const getMarketNews = async () => {
   try {
-    // Add "today" or "latest" to try and influence recency
-    const result = await yahooFinance.search('stock market news today', { newsCount: 10 });
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    // Use a mix of broad market terms to ensure capture
+    // Searching for "Stock Market" + Date usually yields fresh results
+    const result = await yahooFinance.search(`stock market news ${dateStr}`, { newsCount: 10 });
+
+    // Fallback if strict date returns nothing: just Month Year
+    if (!result.news || result.news.length < 3) {
+      const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+      const fallback = await yahooFinance.search(`market news ${monthYear}`, { newsCount: 10 });
+      return fallback.news || [];
+    }
     return result.news || [];
   } catch (error) {
     console.error("Error fetching market news:", error);
@@ -904,20 +963,24 @@ export const getMarketNews = async () => {
 };
 
 export const getInnovationNews = async () => {
+  const date = new Date();
+  const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const queries = [
-    'Artificial Intelligence breakthrough news',
-    'Green energy innovation news',
-    'Biotech medical breakthrough news',
-    'Space technology news',
-    'Next gen battery technology news'
+    `Artificial Intelligence news ${monthYear}`,
+    `Green energy innovation ${monthYear}`,
+    `Biotech breakthrough ${monthYear}`,
+    `Space technology ${monthYear}`,
+    `Future tech trends ${monthYear}`
   ];
 
   try {
-    // Pick 2 random topics to keep it fresh/varied each time, or fetch all?
-    // Let's fetch Top 3 combined.
     const promises = queries.map(q => yahooFinance.search(q, { newsCount: 2 }));
     const results = await Promise.all(promises);
-    return results.flatMap(r => r.news || []);
+    // Deduplicate in case of overlap
+    const allNews = results.flatMap(r => r.news || []);
+    const uniqueNews = Array.from(new Map(allNews.map(item => [item.title, item])).values());
+    return uniqueNews;
   } catch (error) {
     console.error("Error fetching innovation news:", error);
     return [];

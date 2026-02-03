@@ -943,8 +943,18 @@ export const searchSymbol = async (query) => {
 
 export const getMarketNews = async () => {
   try {
-    // Add "today" or "latest" to try and influence recency
-    const result = await yahooFinance.search('stock market news today', { newsCount: 10 });
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    // Use a mix of broad market terms to ensure capture
+    // Searching for "Stock Market" + Date usually yields fresh results
+    const result = await yahooFinance.search(`stock market news ${dateStr}`, { newsCount: 10 });
+
+    // Fallback if strict date returns nothing: just Month Year
+    if (!result.news || result.news.length < 3) {
+      const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+      const fallback = await yahooFinance.search(`market news ${monthYear}`, { newsCount: 10 });
+      return fallback.news || [];
+    }
     return result.news || [];
   } catch (error) {
     console.error("Error fetching market news:", error);
@@ -953,18 +963,24 @@ export const getMarketNews = async () => {
 };
 
 export const getInnovationNews = async () => {
+  const date = new Date();
+  const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const queries = [
-    'Artificial Intelligence breakthrough news',
-    'Green energy innovation news',
-    'Biotech medical breakthrough news',
-    'Space technology news',
-    'Next gen battery technology news'
+    `Artificial Intelligence news ${monthYear}`,
+    `Green energy innovation ${monthYear}`,
+    `Biotech breakthrough ${monthYear}`,
+    `Space technology ${monthYear}`,
+    `Future tech trends ${monthYear}`
   ];
 
   try {
     const promises = queries.map(q => yahooFinance.search(q, { newsCount: 2 }));
     const results = await Promise.all(promises);
-    return results.flatMap(r => r.news || []);
+    // Deduplicate in case of overlap
+    const allNews = results.flatMap(r => r.news || []);
+    const uniqueNews = Array.from(new Map(allNews.map(item => [item.title, item])).values());
+    return uniqueNews;
   } catch (error) {
     console.error("Error fetching innovation news:", error);
     return [];
