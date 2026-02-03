@@ -993,19 +993,19 @@ export const getInnovationNews = async () => {
 };
 
 export const getEconomicEvents = async () => {
-  const date = new Date();
-  const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-
+  // Strategy: broad topic searches are more reliable. 
+  // Yahoo returns recent results by default.
   const categories = [
-    { name: 'Federal Reserve & Rates', query: `Federal Reserve interest rates ${monthYear}` },
-    { name: 'Inflation (CPI/PPI)', query: `CPI inflation report ${monthYear}` },
-    { name: 'Jobs & Economy', query: `Jobs report unemployment ${monthYear}` },
-    { name: 'Earnings Season', query: `Quarterly earnings updates ${monthYear}` },
-    { name: 'Global Economy', query: `Global economic outlook ${monthYear}` }
+    { name: 'Federal Reserve & Rates', query: 'Federal Reserve Powell interest rates' },
+    { name: 'Inflation', query: 'CPI PPI inflation report' },
+    { name: 'Labor Market', query: 'Jobs report unemployment rate' },
+    { name: 'Earnings', query: 'Earnings season guidance' },
+    { name: 'Global Economy', query: 'Global economic growth forecast' }
   ];
 
   try {
     const promises = categories.map(async (cat) => {
+      // Fetch specifically 'news' from search
       const res = await yahooFinance.search(cat.query, { newsCount: 3 });
       return {
         name: cat.name,
@@ -1022,14 +1022,19 @@ export const getEconomicEvents = async () => {
 
 export const getSocialSentiment = async () => {
   try {
-    const queries = ['market sentiment news', 'meme stocks news', 'trending stocks news'];
-    const results = await Promise.all(queries.map(q => yahooFinance.search(q, { newsCount: 4 })));
+    // Strategy: Fetch news for High-Velocity / Retail Favorite tickers
+    // This is the best proxy for "Social Sentiment"
+    const tickers = ['TSLA', 'NVDA', 'PLTR', 'GME', 'COIN'];
+
+    const promises = tickers.map(t => yahooFinance.search(t, { newsCount: 2 }));
+    const results = await Promise.all(promises);
 
     const allNews = results.flatMap(r => r.news || []);
-    // Deduplicate by link
-    const uniqueNews = Array.from(new Map(allNews.map(item => [item.link, item])).values());
 
-    // Sort by provider publish time if available (descending)
+    // Deduplicate by UUID or Title
+    const uniqueNews = Array.from(new Map(allNews.map(item => [item.uuid || item.title, item])).values());
+
+    // Sort by recency
     uniqueNews.sort((a, b) => (b.providerPublishTime || 0) - (a.providerPublishTime || 0));
 
     return uniqueNews.slice(0, 8);
