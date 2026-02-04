@@ -150,6 +150,24 @@ const BlackSwanDashboard = () => {
                                 </div>
                             </div>
 
+                            {/* Hedge Preview - Always visible */}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="text-xs text-gray-500 font-medium">🛡️ Hedges:</span>
+                                {event.hedges && event.hedges.slice(0, 4).map(hedge => (
+                                    <span
+                                        key={hedge.symbol}
+                                        className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded border border-blue-200"
+                                    >
+                                        {hedge.symbol}
+                                    </span>
+                                ))}
+                                {event.hedges && event.hedges.length > 4 && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                        +{event.hedges.length - 4} more
+                                    </span>
+                                )}
+                            </div>
+
                             {/* AI Reasoning */}
                             <div className="mt-3 flex items-start gap-2 text-sm">
                                 <span className="text-lg">🤖</span>
@@ -184,20 +202,24 @@ const BlackSwanDashboard = () => {
                                     <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
                                         <span>🛡️</span> Hedging Instruments
                                     </h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                        {event.hedges.map(hedge => (
-                                            <div
-                                                key={hedge.symbol}
-                                                className="bg-white rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
-                                            >
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="font-bold text-blue-600">{hedge.symbol}</span>
-                                                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{hedge.type}</span>
+                                    {event.hedges && event.hedges.length > 0 ? (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                            {event.hedges.map(hedge => (
+                                                <div
+                                                    key={hedge.symbol}
+                                                    className="bg-white rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+                                                >
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="font-bold text-blue-600">{hedge.symbol}</span>
+                                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{hedge.type}</span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 truncate" title={hedge.name}>{hedge.name}</p>
                                                 </div>
-                                                <p className="text-xs text-gray-500 truncate" title={hedge.name}>{hedge.name}</p>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-500 italic">No hedging instruments available</p>
+                                    )}
                                 </div>
                             </div>
                         )}
