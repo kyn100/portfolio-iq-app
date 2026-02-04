@@ -411,7 +411,10 @@ const getPerformanceData = async (symbol) => {
     const threeMonthIdx = Math.max(0, quotes.length - 66);
     const threeMonth = ((currentPrice - quotes[threeMonthIdx].close) / quotes[threeMonthIdx].close) * 100;
 
-    return { todayChange, oneWeek, ytd, oneMonth, threeMonth };
+    // Sparkline Data (Last 3 months simplified)
+    const sparkline = quotes.slice(Math.max(0, quotes.length - 60)).map(q => q.close);
+
+    return { todayChange, oneWeek, ytd, oneMonth, threeMonth, sparkline };
   } catch (error) {
     console.error(`Error fetching performance data for ${symbol}:`, error.message);
     return null;

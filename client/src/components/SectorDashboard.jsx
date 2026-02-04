@@ -1,6 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { fetchSectors } from '../services/api';
 
+const Sparkline = ({ data }) => {
+    if (!data || data.length < 2) return null;
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min || 1;
+
+    // Generate path
+    const points = data.map((val, idx) => {
+        const x = (idx / (data.length - 1)) * 100;
+        const y = 100 - ((val - min) / range) * 100;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    return (
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+            <polyline
+                points={points}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                vectorEffect="non-scaling-stroke"
+            />
+        </svg>
+    );
+};
+
 const SectorDashboard = () => {
     const [sectors, setSectors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,8 +85,8 @@ const SectorDashboard = () => {
                         <button
                             onClick={() => setActiveTimeframe('today')}
                             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === 'today'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             Today
@@ -68,8 +94,8 @@ const SectorDashboard = () => {
                         <button
                             onClick={() => setActiveTimeframe('1week')}
                             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === '1week'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             1 Week
@@ -77,8 +103,8 @@ const SectorDashboard = () => {
                         <button
                             onClick={() => setActiveTimeframe('ytd')}
                             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${activeTimeframe === 'ytd'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             YTD
@@ -111,10 +137,20 @@ const SectorDashboard = () => {
                         }
 
                         return (
-                            <div key={sector.name} className={`${bgClass} p-4 rounded-lg flex flex-col items-center justify-center text-center transition-transform hover:scale-105 cursor-default`}>
-                                <div className="text-xs font-semibold opacity-90 uppercase tracking-wider mb-1">{sector.name}</div>
-                                <div className="text-lg font-bold">{val > 0 ? '+' : ''}{val.toFixed(2)}%</div>
-                                <div className="text-xs opacity-75">{sector.etf}</div>
+                            <div key={sector.name} className={`${bgClass} relative p-4 rounded-lg flex flex-col items-center justify-center text-center transition-transform hover:scale-105 cursor-default overflow-hidden`}>
+                                {/* Sparkline Background */}
+                                {sector.performance?.sparkline && (
+                                    <div className="absolute inset-x-0 bottom-0 h-full opacity-25 p-0 pointer-events-none">
+                                        <Sparkline data={sector.performance.sparkline} />
+                                    </div>
+                                )}
+
+                                {/* Content */}
+                                <div className="relative z-10">
+                                    <div className="text-xs font-semibold opacity-90 uppercase tracking-wider mb-1">{sector.name}</div>
+                                    <div className="text-lg font-bold">{val > 0 ? '+' : ''}{val.toFixed(2)}%</div>
+                                    <div className="text-xs opacity-75">{sector.etf}</div>
+                                </div>
                             </div>
                         );
                     })}
