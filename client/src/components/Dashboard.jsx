@@ -5,6 +5,7 @@ import SectorDashboard from './SectorDashboard';
 import InsightsDashboard from './InsightsDashboard';
 import TrendAlertsDashboard from './TrendAlertsDashboard';
 import AIWatchlistPanel from './AIWatchlistPanel';
+import BlackSwanDashboard from './BlackSwanDashboard';
 import {
   fetchPortfolio,
   addToPortfolio,
@@ -23,7 +24,7 @@ const Dashboard = ({ session }) => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('sectors'); // Default to Market Sectors
+  const [activeTab, setActiveTab] = useState('blackswan'); // Default to Black Swan Monitor
 
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
 
@@ -164,6 +165,16 @@ const Dashboard = ({ session }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Tabs */}
         <div className="flex overflow-x-auto mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-1 touch-pan-x scrollbar-hide">
+          <button
+            onClick={() => setActiveTab('blackswan')}
+            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'blackswan'
+              ? 'bg-red-600 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <span className="text-lg">🦢</span>
+            Black Swan
+          </button>
           <button
             onClick={() => setActiveTab('sectors')}
             className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'sectors'
@@ -398,6 +409,11 @@ const Dashboard = ({ session }) => {
               </div>
             )}
           </>
+        )}
+
+        {/* Black Swan Tab Content */}
+        {activeTab === 'blackswan' && (
+          <BlackSwanDashboard key={lastRefreshed} />
         )}
 
         {/* Sectors Tab Content */}

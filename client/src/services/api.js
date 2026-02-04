@@ -266,3 +266,9 @@ export const fetchRecommendations = async () => {
   if (!response.ok) throw new Error('Failed to fetch recommendations');
   return response.json();
 };
+
+export const fetchBlackSwanEvents = async () => {
+  const response = await fetch(`${API_BASE}/blackswan`);
+  if (!response.ok) throw new Error('Failed to fetch black swan events');
+  return response.json();
+};
