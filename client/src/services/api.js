@@ -272,3 +272,9 @@ export const fetchBlackSwanEvents = async () => {
   if (!response.ok) throw new Error('Failed to fetch black swan events');
   return response.json();
 };
+
+export const fetchGrayRhinoEvents = async () => {
+  const response = await fetch(`${API_BASE}/grayrhino`);
+  if (!response.ok) throw new Error('Failed to fetch gray rhino events');
+  return response.json();
+};

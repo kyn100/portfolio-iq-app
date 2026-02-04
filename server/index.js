@@ -10,6 +10,7 @@ import batchQuotesRouter from './routes/batchQuotes.js';
 import searchRouter from './routes/search.js';
 import trendAlertsRouter from './routes/trendAlerts.js';
 import blackswanRouter from './routes/blackswan.js';
+import grayrhinoRouter from './routes/grayrhino.js';
 import recommendationsHandler from '../api/_controllers/recommendations.js';
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/batch-quotes', batchQuotesRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/recommendations', recommendationsHandler);
 app.use('/api/blackswan', blackswanRouter);
+app.use('/api/grayrhino', grayrhinoRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

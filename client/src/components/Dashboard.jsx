@@ -6,6 +6,7 @@ import InsightsDashboard from './InsightsDashboard';
 import TrendAlertsDashboard from './TrendAlertsDashboard';
 import AIWatchlistPanel from './AIWatchlistPanel';
 import BlackSwanDashboard from './BlackSwanDashboard';
+import GrayRhinoDashboard from './GrayRhinoDashboard';
 import {
   fetchPortfolio,
   addToPortfolio,
@@ -174,6 +175,16 @@ const Dashboard = ({ session }) => {
           >
             <span className="text-lg">🦢</span>
             Black Swan
+          </button>
+          <button
+            onClick={() => setActiveTab('grayrhino')}
+            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'grayrhino'
+              ? 'bg-slate-700 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <span className="text-lg">🦏</span>
+            Gray Rhino
           </button>
           <button
             onClick={() => setActiveTab('sectors')}
@@ -414,6 +425,11 @@ const Dashboard = ({ session }) => {
         {/* Black Swan Tab Content */}
         {activeTab === 'blackswan' && (
           <BlackSwanDashboard key={lastRefreshed} />
+        )}
+
+        {/* Gray Rhino Tab Content */}
+        {activeTab === 'grayrhino' && (
+          <GrayRhinoDashboard key={lastRefreshed} />
         )}
 
         {/* Sectors Tab Content */}
