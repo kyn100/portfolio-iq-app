@@ -132,28 +132,25 @@ EVENTS TO ANALYZE:
 4. Out-of-Control AI (Job loss, misalignment, security)
 5. Political Polarization & Institutional Decay (Civil unrest, gridlock)
 
-For each event, provide:
+For each of the 5 events listed above, provide:
 - intensity: number 1-100 representing current severity/urgency (100 = critical breaking point)
 - trend: "accelerating", "steady", or "decelerating"
 - reasoning: Brief 1-2 sentence summary of the situation
 - keyFactors: Array of 3 specific bullet points explaining WHY the intensity is at this level
 - recentNews: Array of 2-3 realistic headlines based on current global situation
 
-Respond in valid JSON format:
+Respond in valid JSON format containing ALL 5 events:
 {
   "events": [
     {
       "id": "debt-crisis",
       "intensity": 75,
       "trend": "accelerating",
-      "reasoning": "Rising yields and deficits in major economies are increasing fragility.",
-      "keyFactors": [
-        "US Debt-to-GDP ratio surpassing historical norms",
-        "Higher for longer interest rates pressuring budgets",
-        "Sovereign default risks in emerging markets"
-      ],
-      "recentNews": ["Global Debt Hits Record High", "IMF Warns of Fiscal Cliff"]
-    }
+      "reasoning": "...",
+      "keyFactors": ["...", "...", "..."],
+      "recentNews": ["...", "..."]
+    },
+    ... (include all other events)
   ]
 }`;
 
