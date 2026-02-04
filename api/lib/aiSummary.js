@@ -1,4 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Attempts to load from server/.env for local dev support
+dotenv.config({ path: path.join(__dirname, '../../server/.env') });
 
 let genAIInstance = null;
 const getGenAI = () => {
