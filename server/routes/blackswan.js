@@ -4,12 +4,21 @@ import yahooFinance from 'yahoo-finance2';
 
 const router = Router();
 
+// Suppress warnings
+yahooFinance.suppressNotices(['yahooSurvey']);
+
 // Fetch news for a specific topic
-const fetchNewsForTopic = async (keywords) => {
+const fetchNewsForTopic = async (keywords, fallbackSymbol) => {
     try {
-        // Search for news using the first keyword
-        const searchTerm = keywords[0];
-        const result = await yahooFinance.search(searchTerm, { newsCount: 5, quotesCount: 0 });
+        // 1. Try first keyword
+        let searchTerm = keywords[0];
+        let result = await yahooFinance.search(searchTerm, { newsCount: 5, quotesCount: 0 });
+
+        // 2. If no news, try fallback symbol (first hedge)
+        if ((!result.news || result.news.length === 0) && fallbackSymbol) {
+            console.log(`No news for ${searchTerm}, trying symbol ${fallbackSymbol}`);
+            result = await yahooFinance.search(fallbackSymbol, { newsCount: 5, quotesCount: 0 });
+        }
 
         if (result.news && result.news.length > 0) {
             return result.news.slice(0, 3).map(item => ({
@@ -21,7 +30,7 @@ const fetchNewsForTopic = async (keywords) => {
         }
         return [];
     } catch (error) {
-        console.error(`News fetch error for ${keywords[0]}:`, error.message);
+        console.error(`News fetch error:`, error.message);
         return [];
     }
 };
@@ -186,7 +195,8 @@ router.get('/', async (req, res) => {
         // Fetch real news for each event in parallel
         const eventsWithNews = await Promise.all(
             events.map(async (event) => {
-                const realNews = await fetchNewsForTopic(event.newsKeywords || []);
+                const fallbackSymbol = event.hedges && event.hedges.length > 0 ? event.hedges[0].symbol : null;
+                const realNews = await fetchNewsForTopic(event.newsKeywords || [event.name], fallbackSymbol);
                 return {
                     ...event,
                     news: realNews.length > 0 ? realNews : event.news // Use real news if available, fallback to AI
