@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchSectors } from '../services/api';
+import { fetchSectors, fetchSectorAnalysis } from '../services/api';
 
 const Sparkline = ({ data, color, interactive = false }) => {
     const [hoverData, setHoverData] = useState(null);
@@ -112,6 +112,21 @@ const SectorModal = ({ sector, onClose }) => {
 
     const [timeframe, setTimeframe] = useState('1y');
 
+    // AI Analysis State
+    const [analysis, setAnalysis] = useState(null);
+    const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+
+    // Fetch AI Analysis on mount
+    useEffect(() => {
+        if (!sector) return;
+        setAnalysis(null);
+        setLoadingAnalysis(true);
+        fetchSectorAnalysis(sector.name, sector.performance, sector.leaders)
+            .then(data => setAnalysis(data))
+            .catch(err => console.error("Analysis fetch failed", err))
+            .finally(() => setLoadingAnalysis(false));
+    }, [sector]);
+
     // Use full chart history for details
     const fullChartData = sector.performance?.sparkline || [];
     const perf = sector.performance || {};
@@ -195,6 +210,47 @@ const SectorModal = ({ sector, onClose }) => {
                                 </>
                             ) : (
                                 <div className="h-full flex items-center justify-center text-gray-400">No chart data available</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* AI Outlook Section */}
+                    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl p-5 text-white shadow-lg relative overflow-hidden border border-slate-700 mb-6">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="bg-indigo-500/20 text-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-indigo-500/30 flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                                    AI Strategic Forecast
+                                </div>
+                                {loadingAnalysis && <div className="animate-spin w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full"></div>}
+                            </div>
+
+                            {loadingAnalysis ? (
+                                <div className="space-y-2 animate-pulse">
+                                    <div className="h-6 bg-white/10 rounded w-1/3"></div>
+                                    <div className="h-4 bg-white/5 rounded w-full"></div>
+                                    <div className="h-4 bg-white/5 rounded w-3/4"></div>
+                                </div>
+                            ) : analysis ? (
+                                <>
+                                    <h3 className="text-xl font-bold mb-2 flex items-center gap-3">
+                                        Outlook: <span className={`${analysis.outlook === 'BULLISH' ? 'text-emerald-400' : analysis.outlook === 'BEARISH' ? 'text-rose-400' : 'text-amber-400'} tracking-wide`}>{analysis.outlook}</span>
+                                    </h3>
+                                    <p className="text-slate-300 text-sm leading-relaxed mb-4">{analysis.summary}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {analysis.keys?.map((k, i) => (
+                                            <span key={i} className="bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md text-[10px] font-medium text-slate-300 transition-colors cursor-default border border-white/5">
+                                                {k}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-slate-400 text-sm italic">AI Analysis unavailable. Verify API Key.</div>
                             )}
                         </div>
                     </div>

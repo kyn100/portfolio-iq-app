@@ -152,3 +152,39 @@ export const generateStockRecommendations = async (marketData) => {
         };
     }
 };
+
+export const generateSectorPrediction = async (sectorName, perf, leaders) => {
+    if (!genAI) return null;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = `
+        You are a Wall Street Sector Strategist.
+        Analyze the future trend for the **${sectorName}** sector for the next 1-3 months.
+
+        ### Data
+        - Returns: Today ${perf?.todayChange?.toFixed(2)}%, 1W ${perf?.oneWeek?.toFixed(2)}%, 1M ${perf?.oneMonth?.toFixed(2)}%, YTD ${perf?.ytd?.toFixed(2)}%
+        - Top Movers: ${leaders?.map(l => `${l.symbol} (${l.change}%)`).join(', ') || 'None'}
+
+        ### Output (JSON ONLY)
+        {
+            "outlook": "BULLISH" | "BEARISH" | "NEUTRAL",
+            "summary": "1-2 sentence strategic forecast explaining the trend prediction.",
+            "keys": ["Key Factor 1", "Key Factor 2"]
+        }
+        
+        Style: Professional, concise, forward-looking.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("AI Sector Prediction Error:", e);
+        return {
+            outlook: "NEUTRAL",
+            summary: "Unable to generate specific AI prediction at this time. Monitoring technical levels.",
+            keys: ["Market Volatility", "Data Availability"]
+        };
+    }
+};

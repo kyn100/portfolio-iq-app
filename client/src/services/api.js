@@ -211,6 +211,16 @@ export const fetchSectors = async () => {
   return response.json();
 };
 
+export const fetchSectorAnalysis = async (sectorName, performance, leaders) => {
+  const response = await fetch(`${API_BASE}/sectors/analysis`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sector: sectorName, performance, leaders })
+  });
+  if (!response.ok) throw new Error('Failed to fetch sector analysis');
+  return response.json();
+};
+
 export const fetchTrendAlerts = async () => {
   const response = await fetch(`${API_BASE}/trend-alerts`);
   if (!response.ok) throw new Error('Failed to fetch trend alerts');
