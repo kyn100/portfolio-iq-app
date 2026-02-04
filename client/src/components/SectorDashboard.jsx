@@ -331,6 +331,7 @@ const SectorDashboard = () => {
     const [error, setError] = useState(null);
     const [activeTimeframe, setActiveTimeframe] = useState('today'); // 'today', '1week', 'ytd'
     const [selectedSector, setSelectedSector] = useState(null);
+    const [predictions, setPredictions] = useState({}); // { sectorName: { outlook, loading } }
 
     useEffect(() => {
         const loadSectors = async () => {
@@ -345,6 +346,32 @@ const SectorDashboard = () => {
         };
         loadSectors();
     }, []);
+
+    // Fetch AI predictions for all sectors
+    useEffect(() => {
+        if (sectors.length === 0) return;
+
+        sectors.forEach(sector => {
+            // Skip if already loaded or loading
+            if (predictions[sector.name]) return;
+
+            setPredictions(prev => ({ ...prev, [sector.name]: { loading: true } }));
+
+            fetchSectorAnalysis(sector.name, sector.performance, sector.leaders)
+                .then(data => {
+                    setPredictions(prev => ({
+                        ...prev,
+                        [sector.name]: { outlook: data?.outlook || 'NEUTRAL', loading: false }
+                    }));
+                })
+                .catch(() => {
+                    setPredictions(prev => ({
+                        ...prev,
+                        [sector.name]: { outlook: null, loading: false }
+                    }));
+                });
+        });
+    }, [sectors]);
 
     if (loading) return (
         <div className="flex justify-center p-12">
@@ -459,7 +486,25 @@ const SectorDashboard = () => {
                                 <div className="p-4 pb-0 relative z-10">
                                     <div className="flex justify-between items-center">
                                         <div className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate mr-2" title={sector.name}>{sector.name}</div>
-                                        <div className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{sector.etf}</div>
+                                        <div className="flex items-center gap-1">
+                                            {/* AI Prediction Icon */}
+                                            {predictions[sector.name]?.loading ? (
+                                                <div className="w-4 h-4 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent"></div>
+                                            ) : predictions[sector.name]?.outlook && (
+                                                <div
+                                                    className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${predictions[sector.name].outlook === 'BULLISH'
+                                                            ? 'bg-emerald-100 text-emerald-600'
+                                                            : predictions[sector.name].outlook === 'BEARISH'
+                                                                ? 'bg-rose-100 text-rose-600'
+                                                                : 'bg-amber-100 text-amber-600'
+                                                        }`}
+                                                    title={`AI Forecast: ${predictions[sector.name].outlook}`}
+                                                >
+                                                    {predictions[sector.name].outlook === 'BULLISH' ? '↑' : predictions[sector.name].outlook === 'BEARISH' ? '↓' : '→'}
+                                                </div>
+                                            )}
+                                            <div className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{sector.etf}</div>
+                                        </div>
                                     </div>
                                     <div className={`text-2xl font-bold mt-1 ${textClass}`}>
                                         {val > 0 ? '+' : ''}{val.toFixed(2)}%
