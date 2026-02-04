@@ -378,15 +378,28 @@ const getPerformanceData = async (symbol) => {
   try {
     const period1 = calculateStartDate('1y');
     const [chartData, quoteData] = await Promise.all([
-      yahooFinance.chart(symbol, { interval: '1d', period1 }),
-      yahooFinance.quote(symbol)
+      yahooFinance.chart(symbol, { interval: '1d', period1 }).catch(() => null),
+      yahooFinance.quote(symbol).catch(() => null)
     ]);
+
+    // If we have quote data but no chart, use quote for basic performance
+    if ((!chartData || !chartData.quotes || chartData.quotes.length < 20) && quoteData) {
+      console.log(`Using quote-only fallback for ${symbol}`);
+      return {
+        todayChange: quoteData.regularMarketChangePercent || 0,
+        oneWeek: quoteData.regularMarketChangePercent || 0, // Best we have
+        ytd: null,
+        oneMonth: null,
+        threeMonth: null,
+        sparkline: []
+      };
+    }
 
     if (!chartData || !chartData.quotes) return null;
 
     const quotes = chartData.quotes.filter(q => q.close !== null);
 
-    if (quotes.length < 20) return null;
+    if (quotes.length < 5) return null; // Reduced from 20 to be more lenient
 
     const currentPrice = quotes[quotes.length - 1].close;
 
@@ -405,11 +418,15 @@ const getPerformanceData = async (symbol) => {
 
     // 1 Month (approx 22 trading days)
     const oneMonthIdx = Math.max(0, quotes.length - 22);
-    const oneMonth = ((currentPrice - quotes[oneMonthIdx].close) / quotes[oneMonthIdx].close) * 100;
+    const oneMonth = quotes.length >= 22
+      ? ((currentPrice - quotes[oneMonthIdx].close) / quotes[oneMonthIdx].close) * 100
+      : null;
 
     // 3 Months (approx 66 trading days)
     const threeMonthIdx = Math.max(0, quotes.length - 66);
-    const threeMonth = ((currentPrice - quotes[threeMonthIdx].close) / quotes[threeMonthIdx].close) * 100;
+    const threeMonth = quotes.length >= 66
+      ? ((currentPrice - quotes[threeMonthIdx].close) / quotes[threeMonthIdx].close) * 100
+      : null;
 
     // Sparkline Data (Full 1 Year for frontend slicing)
     const sparkline = quotes.map(q => ({
