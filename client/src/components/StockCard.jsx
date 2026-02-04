@@ -490,37 +490,56 @@ const StockCard = ({ stock, onRemove, isWatchlist = false }) => {
                 </div>
               )}
 
-              {/* Full Recommendation Summary */}
-              {analysis.recommendation?.reasons && analysis.recommendation.reasons.length > 0 && (
-                <div className={`mt-4 p-3 rounded-lg border-2 border-dashed ${analysis.recommendation.recommendation === 'BUY' ? 'border-green-300 bg-green-50' :
-                  analysis.recommendation.recommendation === 'SELL' ? 'border-red-300 bg-red-50' :
-                    'border-yellow-300 bg-yellow-50'
-                  }`}>
-                  <div className={`text-sm font-bold mb-2 ${analysis.recommendation.recommendation === 'BUY' ? 'text-green-700' :
-                    analysis.recommendation.recommendation === 'SELL' ? 'text-red-700' :
-                      'text-yellow-700'
-                    }`}>
-                    Why {analysis.recommendation.recommendation}? ({analysis.recommendation.bullishCount} bullish, {analysis.recommendation.bearishCount} bearish signals)
+              {/* Controversial Opinions / Risks */}
+              {analysis.recommendation?.reasons && (
+                <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="text-sm font-bold text-orange-900 mb-2 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Controversial Opinions & Risks
                   </div>
-                  <ul className="text-sm space-y-1.5">
-                    {analysis.recommendation.reasons.map((reason, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${reason.startsWith('Caution') || reason.startsWith('Bearish') || reason.startsWith('Also negative')
-                          ? 'bg-red-500'
-                          : reason.startsWith('Note') || reason.startsWith('Bullish') || reason.startsWith('Also positive')
-                            ? 'bg-green-500'
-                            : reason.includes('Mixed') || reason.includes('waiting')
-                              ? 'bg-yellow-500'
-                              : analysis.recommendation.recommendation === 'BUY'
-                                ? 'bg-green-500'
-                                : analysis.recommendation.recommendation === 'SELL'
-                                  ? 'bg-red-500'
-                                  : 'bg-yellow-500'
-                          }`} />
-                        <span className="text-gray-700">{reason}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                  <div className="space-y-3">
+                    {/* Contrarian Technicals */}
+                    {analysis.recommendation.reasons.some(r =>
+                      (analysis.recommendation.recommendation.includes('BUY') && (r.includes('Bearish') || r.includes('Caution') || r.includes('Overbought'))) ||
+                      (analysis.recommendation.recommendation.includes('SELL') && (r.includes('Bullish') || r.includes('Positive') || r.includes('Oversold')))
+                    ) ? (
+                      <ul className="text-sm space-y-1">
+                        {analysis.recommendation.reasons.filter(r =>
+                          (analysis.recommendation.recommendation.includes('BUY') && (r.includes('Bearish') || r.includes('Caution') || r.includes('Overbought'))) ||
+                          (analysis.recommendation.recommendation.includes('SELL') && (r.includes('Bullish') || r.includes('Positive') || r.includes('Oversold'))) ||
+                          (analysis.recommendation.recommendation === 'HOLD')
+                        ).map((reason, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-gray-700">
+                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                            {reason}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">No significant technical contradictions detected.</p>
+                    )}
+
+                    {/* Analyst Dissent */}
+                    {stock.analystRatings && (
+                      <div className="pt-2 border-t border-orange-100">
+                        <p className="text-xs text-orange-800 mb-1 font-medium">Wall St Dissent:</p>
+                        {analysis.recommendation.recommendation.includes('BUY') && (stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0) > 0 ? (
+                          <p className="text-xs text-gray-600">
+                            {(stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0)} analysts recommend SELLING, divergent from the technical trend.
+                          </p>
+                        ) : analysis.recommendation.recommendation.includes('SELL') && (stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0) > 0 ? (
+                          <p className="text-xs text-gray-600">
+                            {(stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0)} analysts recommend BUYING, suggesting value despite negative momentum.
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">Analysts generally align with the technical trend.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
