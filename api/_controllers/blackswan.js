@@ -1,7 +1,30 @@
 import { Router } from 'express';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import yahooFinance from 'yahoo-finance2';
 
 const router = Router();
+
+// Fetch news for a specific topic
+const fetchNewsForTopic = async (keywords) => {
+    try {
+        // Search for news using the first keyword
+        const searchTerm = keywords[0];
+        const result = await yahooFinance.search(searchTerm, { newsCount: 5, quotesCount: 0 });
+
+        if (result.news && result.news.length > 0) {
+            return result.news.slice(0, 3).map(item => ({
+                title: item.title,
+                publisher: item.publisher,
+                link: item.link,
+                publishedAt: item.providerPublishTime ? new Date(item.providerPublishTime * 1000).toLocaleDateString() : null
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error(`News fetch error for ${keywords[0]}:`, error.message);
+        return [];
+    }
+};
 
 // Initialize Gemini AI
 let genAIInstance = null;
@@ -24,7 +47,8 @@ const BLACK_SWAN_EVENTS = [
             { symbol: 'UVXY', name: 'ProShares Ultra VIX Short-Term Futures', type: 'Leveraged Volatility' },
             { symbol: 'SH', name: 'ProShares Short S&P500', type: 'Inverse ETF' },
             { symbol: 'TAIL', name: 'Cambria Tail Risk ETF', type: 'Tail Risk Hedge' }
-        ]
+        ],
+        newsKeywords: ['algorithmic trading crash', 'flash crash', 'market circuit breaker', 'HFT market disruption']
     },
     {
         id: 'leader-death',
@@ -36,7 +60,8 @@ const BLACK_SWAN_EVENTS = [
             { symbol: 'TLT', name: 'iShares 20+ Year Treasury Bond', type: 'Treasury Bonds' },
             { symbol: 'VXX', name: 'iPath S&P 500 VIX Short-Term Futures', type: 'Volatility ETN' },
             { symbol: 'UUP', name: 'Invesco DB US Dollar Index', type: 'Dollar Strength' }
-        ]
+        ],
+        newsKeywords: ['world leader health', 'political succession', 'head of state', 'leadership transition']
     },
     {
         id: 'pandemic',
@@ -49,7 +74,8 @@ const BLACK_SWAN_EVENTS = [
             { symbol: 'MRNA', name: 'Moderna Inc', type: 'mRNA Vaccines' },
             { symbol: 'ZM', name: 'Zoom Video Communications', type: 'Remote Work' },
             { symbol: 'TDOC', name: 'Teladoc Health', type: 'Telehealth' }
-        ]
+        ],
+        newsKeywords: ['bioweapon', 'lab leak', 'pandemic preparedness', 'novel pathogen', 'biosecurity']
     },
     {
         id: 'cyberattack',
@@ -62,7 +88,8 @@ const BLACK_SWAN_EVENTS = [
             { symbol: 'PANW', name: 'Palo Alto Networks', type: 'Cybersecurity Stock' },
             { symbol: 'CRWD', name: 'CrowdStrike Holdings', type: 'Cybersecurity Stock' },
             { symbol: 'GLD', name: 'SPDR Gold Shares', type: 'Safe Haven' }
-        ]
+        ],
+        newsKeywords: ['cyberattack infrastructure', 'power grid hack', 'ransomware attack', 'state-sponsored cyber', 'critical infrastructure']
     },
     {
         id: 'taiwan-conflict',
@@ -76,7 +103,8 @@ const BLACK_SWAN_EVENTS = [
             { symbol: 'GLD', name: 'SPDR Gold Shares', type: 'Safe Haven' },
             { symbol: 'USO', name: 'United States Oil Fund', type: 'Oil ETF' },
             { symbol: 'UNG', name: 'United States Natural Gas Fund', type: 'Natural Gas' }
-        ]
+        ],
+        newsKeywords: ['Taiwan strait', 'China Taiwan military', 'Taiwan invasion', 'South China Sea', 'US Taiwan defense']
     }
 ];
 
@@ -161,8 +189,23 @@ Respond in valid JSON format:
 // GET / - Get all black swan events with analysis
 router.get('/', async (req, res) => {
     try {
+        // Get AI probabilities
         const events = await assessBlackSwanProbabilities();
-        res.json(events);
+
+        // Fetch real news for each event in parallel
+        const eventsWithNews = await Promise.all(
+            events.map(async (event) => {
+                // Determine search keywords based on event definition
+                const keywords = [event.name, ...(event.newsKeywords || [])];
+                const realNews = await fetchNewsForTopic(keywords);
+                return {
+                    ...event,
+                    news: realNews.length > 0 ? realNews : event.news // Use real news if available, fallback to AI
+                };
+            })
+        );
+
+        res.json(eventsWithNews);
     } catch (error) {
         console.error('Black Swan API Error:', error);
         res.status(500).json({ error: 'Failed to fetch black swan analysis' });

@@ -1,7 +1,30 @@
 import { Router } from 'express';
 import { getGenAI } from '../services/aiSummary.js';
+import yahooFinance from 'yahoo-finance2';
 
 const router = Router();
+
+// Fetch news for a specific topic
+const fetchNewsForTopic = async (keywords) => {
+    try {
+        // Search for news using the first keyword
+        const searchTerm = keywords[0];
+        const result = await yahooFinance.search(searchTerm, { newsCount: 5, quotesCount: 0 });
+
+        if (result.news && result.news.length > 0) {
+            return result.news.slice(0, 3).map(item => ({
+                title: item.title,
+                publisher: item.publisher,
+                link: item.link,
+                publishedAt: item.providerPublishTime ? new Date(item.providerPublishTime * 1000).toLocaleDateString() : null
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error(`News fetch error for ${keywords[0]}:`, error.message);
+        return [];
+    }
+};
 
 // Black Swan Event Definitions
 const BLACK_SWAN_EVENTS = [
@@ -157,8 +180,21 @@ Respond in valid JSON format:
 // GET /api/blackswan - Get all black swan events with analysis
 router.get('/', async (req, res) => {
     try {
+        // Get AI probabilities
         const events = await assessBlackSwanProbabilities();
-        res.json(events);
+
+        // Fetch real news for each event in parallel
+        const eventsWithNews = await Promise.all(
+            events.map(async (event) => {
+                const realNews = await fetchNewsForTopic(event.newsKeywords || []);
+                return {
+                    ...event,
+                    news: realNews.length > 0 ? realNews : event.news // Use real news if available, fallback to AI
+                };
+            })
+        );
+
+        res.json(eventsWithNews);
     } catch (error) {
         console.error('Black Swan API Error:', error);
         res.status(500).json({ error: 'Failed to fetch black swan analysis' });

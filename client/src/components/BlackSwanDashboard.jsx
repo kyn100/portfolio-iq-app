@@ -180,18 +180,31 @@ const BlackSwanDashboard = () => {
                             <div className="border-t border-gray-100 bg-gray-50 p-5 space-y-4 animate-fadeIn">
                                 {/* Recent News */}
                                 <div>
-                                    <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                        <span>📰</span> Related Headlines
+                                    <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span>📰</span> Latest Related News
                                     </h4>
                                     {event.news && event.news.length > 0 ? (
-                                        <ul className="space-y-2">
-                                            {event.news.map((headline, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                                                    <span className="text-blue-500">•</span>
-                                                    {headline}
-                                                </li>
+                                        <div className="space-y-2">
+                                            {event.news.map((item, i) => (
+                                                <a
+                                                    key={i}
+                                                    href={typeof item === 'object' ? item.link : '#'}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="block bg-white rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:shadow-sm transition-all"
+                                                >
+                                                    <p className="text-sm text-gray-800 font-medium line-clamp-2">
+                                                        {typeof item === 'object' ? item.title : item}
+                                                    </p>
+                                                    {typeof item === 'object' && (item.publisher || item.publishedAt) && (
+                                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                                            {item.publisher && <span>{item.publisher}</span>}
+                                                            {item.publishedAt && <span>• {item.publishedAt}</span>}
+                                                        </p>
+                                                    )}
+                                                </a>
                                             ))}
-                                        </ul>
+                                        </div>
                                     ) : (
                                         <p className="text-sm text-gray-500 italic">No recent news available</p>
                                     )}
