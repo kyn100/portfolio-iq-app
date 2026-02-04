@@ -131,7 +131,8 @@ EVENTS TO ANALYZE:
 For each event, provide:
 - intensity: number 1-100 representing current severity/urgency (100 = critical breaking point)
 - trend: "accelerating", "steady", or "decelerating"
-- reasoning: Brief 1-2 sentence explanation of recent developments or data
+- reasoning: Brief 1-2 sentence summary of the situation
+- keyFactors: Array of 3 specific bullet points explaining WHY the intensity is at this level (e.g., specific metrics, policy failures, or events)
 - recentNews: Array of 2-3 realistic headlines based on current global situation
 
 Respond in valid JSON format:
@@ -142,6 +143,11 @@ Respond in valid JSON format:
       "intensity": 75,
       "trend": "accelerating",
       "reasoning": "Rising yields and deficits in major economies are increasing fragility.",
+      "keyFactors": [
+        "US Debt-to-GDP ratio surpassing historical norms",
+        "Rising interest rates increasing debt servicing costs",
+        "Sovereign default risks in emerging markets"
+      ],
       "recentNews": ["Global Debt Hits Record High", "IMF Warns of Fiscal Cliff"]
     }
   ]
@@ -163,7 +169,8 @@ Respond in valid JSON format:
                 probability: {
                     value: aiData.intensity || 50,
                     trend: aiData.trend || 'steady',
-                    reasoning: aiData.reasoning || 'Analysis pending'
+                    reasoning: aiData.reasoning || 'Analysis pending',
+                    keyFactors: aiData.keyFactors || []
                 },
                 news: aiData.recentNews || []
             };
