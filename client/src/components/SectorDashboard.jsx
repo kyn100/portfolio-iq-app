@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchSectors } from '../services/api';
 
-const Sparkline = ({ data, color }) => {
+const Sparkline = ({ data, color, interactive = false }) => {
     const [hoverData, setHoverData] = useState(null);
 
     // Data must be array of { date, value }
@@ -25,6 +25,7 @@ const Sparkline = ({ data, color }) => {
     const areaPath = `0,100 ${linePath} 100,100`;
 
     const handleMouseMove = (e) => {
+        if (!interactive) return;
         const svgRect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - svgRect.left;
         const relativeX = Math.max(0, Math.min(1, x / svgRect.width));
@@ -39,7 +40,7 @@ const Sparkline = ({ data, color }) => {
 
     return (
         <div
-            className="relative w-full h-full group cursor-crosshair"
+            className={`relative w-full h-full group ${interactive ? 'cursor-crosshair' : 'cursor-default'}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setHoverData(null)}
         >
@@ -147,7 +148,7 @@ const SectorModal = ({ sector, onClose }) => {
                                     <div className="absolute bottom-2 right-2 text-[10px] text-gray-400 font-mono">
                                         Low: ${Math.min(...chartData.map(d => d.value || 0)).toFixed(2)}
                                     </div>
-                                    <Sparkline data={chartData} color={perf.ytd >= 0 ? '#16a34a' : '#dc2626'} />
+                                    <Sparkline data={chartData} color={perf.ytd >= 0 ? '#16a34a' : '#dc2626'} interactive={true} />
                                 </>
                             ) : (
                                 <div className="h-full flex items-center justify-center text-gray-400">No chart data available</div>
