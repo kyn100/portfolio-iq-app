@@ -115,6 +115,28 @@ const SectorDashboard = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                     {sectors.map((sector) => {
                         const val = getValue(sector);
+
+                        // Dynamic Sparkline Slicing
+                        let chartData = [];
+                        if (sector.performance?.sparkline) {
+                            const raw = sector.performance.sparkline;
+                            // Check if objects (new API) or numbers (old API cache safety)
+                            const isObject = raw.length > 0 && typeof raw[0] === 'object';
+
+                            if (isObject) {
+                                if (activeTimeframe === 'ytd') {
+                                    const year = new Date().getFullYear();
+                                    chartData = raw.filter(d => new Date(d.date).getFullYear() === year).map(d => d.value);
+                                } else {
+                                    // Show 1 Month Trend (approx 22 trading days) for 'Today' and '1 Week' tabs
+                                    // This gives a relevant short-term context
+                                    chartData = raw.slice(-22).map(d => d.value);
+                                }
+                            } else {
+                                chartData = raw;
+                            }
+                        }
+
                         // Color scale (dynamic ranges)
                         let bgClass = 'bg-gray-100';
 
@@ -139,9 +161,9 @@ const SectorDashboard = () => {
                         return (
                             <div key={sector.name} className={`${bgClass} relative p-4 rounded-lg flex flex-col items-center justify-center text-center transition-transform hover:scale-105 cursor-default overflow-hidden`}>
                                 {/* Sparkline Background */}
-                                {sector.performance?.sparkline && (
+                                {chartData.length > 0 && (
                                     <div className="absolute inset-x-0 bottom-0 h-full opacity-25 p-0 pointer-events-none">
-                                        <Sparkline data={sector.performance.sparkline} />
+                                        <Sparkline data={chartData} />
                                     </div>
                                 )}
 
