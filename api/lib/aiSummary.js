@@ -1,9 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+let genAIInstance = null;
+const getGenAI = () => {
+    if (!genAIInstance && process.env.GEMINI_API_KEY) {
+        genAIInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
+    return genAIInstance;
+};
 
 export const generateMarketSummary = async (newsItems = [], events = [], innovations = []) => {
+    const genAI = getGenAI();
     if (!genAI) {
         return "AI Market Summary unavailable. Add GEMINI_API_KEY to Vercel env variables.";
     }
@@ -98,6 +104,7 @@ export const generateMarketSummary = async (newsItems = [], events = [], innovat
 };
 
 export const generateStockRecommendations = async (marketData) => {
+    const genAI = getGenAI();
     if (!genAI) {
         console.warn("AI Recommendations: No API Key");
         return { immediate: [], watchlist: [] };
@@ -154,6 +161,7 @@ export const generateStockRecommendations = async (marketData) => {
 };
 
 export const generateSectorPrediction = async (sectorName, perf, leaders) => {
+    const genAI = getGenAI();
     if (!genAI) return null;
 
     try {
