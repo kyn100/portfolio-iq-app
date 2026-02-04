@@ -502,22 +502,45 @@ const StockCard = ({ stock, onRemove, isWatchlist = false }) => {
 
                   <div className="space-y-3">
                     {/* Contrarian Technicals */}
-                    {analysis.recommendation.reasons.some(r =>
-                      (analysis.recommendation.recommendation.includes('BUY') && (r.includes('Bearish') || r.includes('Caution') || r.includes('Overbought'))) ||
-                      (analysis.recommendation.recommendation.includes('SELL') && (r.includes('Bullish') || r.includes('Positive') || r.includes('Oversold')))
+                    {/* Contrarian Technicals */}
+                    {(
+                      (analysis.recommendation.recommendation.includes('BUY') && analysis.recommendation.bearishReasons && analysis.recommendation.bearishReasons.length > 0) ||
+                      (analysis.recommendation.recommendation.includes('SELL') && analysis.recommendation.bullishReasons && analysis.recommendation.bullishReasons.length > 0) ||
+                      (analysis.recommendation.recommendation === 'HOLD')
                     ) ? (
-                      <ul className="text-sm space-y-1">
-                        {analysis.recommendation.reasons.filter(r =>
-                          (analysis.recommendation.recommendation.includes('BUY') && (r.includes('Bearish') || r.includes('Caution') || r.includes('Overbought'))) ||
-                          (analysis.recommendation.recommendation.includes('SELL') && (r.includes('Bullish') || r.includes('Positive') || r.includes('Oversold'))) ||
-                          (analysis.recommendation.recommendation === 'HOLD')
-                        ).map((reason, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-gray-700">
-                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
-                            {reason}
-                          </li>
-                        ))}
-                      </ul>
+                      <div>
+                        <p className="text-xs font-semibold text-orange-900/70 uppercase tracking-wider mb-1">
+                          {analysis.recommendation.recommendation === 'HOLD' ? 'Mixed Signals' : 'Counter-points'}
+                        </p>
+                        <ul className="text-sm space-y-1">
+                          {analysis.recommendation.recommendation.includes('BUY') ? (
+                            (analysis.recommendation.bearishReasons || []).slice(0, 3).map((r, i) => (
+                              <li key={i} className="flex items-start gap-2 text-gray-700">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                {r}
+                              </li>
+                            ))
+                          ) : analysis.recommendation.recommendation.includes('SELL') ? (
+                            (analysis.recommendation.bullishReasons || []).slice(0, 3).map((r, i) => (
+                              <li key={i} className="flex items-start gap-2 text-gray-700">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                {r}
+                              </li>
+                            ))
+                          ) : (
+                            // HOLD
+                            [
+                              ...(analysis.recommendation.bullishReasons || []).map(r => `Bullish: ${r}`),
+                              ...(analysis.recommendation.bearishReasons || []).map(r => `Bearish: ${r}`)
+                            ].slice(0, 4).map((r, i) => (
+                              <li key={i} className="flex items-start gap-2 text-gray-700">
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                {r}
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </div>
                     ) : (
                       <p className="text-xs text-gray-500 italic">No significant technical contradictions detected.</p>
                     )}

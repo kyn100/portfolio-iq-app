@@ -355,6 +355,8 @@ export const generateRecommendation = (indicators, fundamentals = null) => {
     reasons: reasons.slice(0, 5), // Max 5 reasons
     bullishCount: bullishReasons.length,
     bearishCount: bearishReasons.length,
+    bullishReasons: bullishReasons,
+    bearishReasons: bearishReasons
   };
 };
 
