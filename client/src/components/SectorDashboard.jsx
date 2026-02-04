@@ -98,11 +98,120 @@ const Sparkline = ({ data, color }) => {
     );
 };
 
+const SectorModal = ({ sector, onClose }) => {
+    if (!sector) return null;
+
+    // Use full chart history for details
+    const chartData = sector.performance?.sparkline || [];
+    const perf = sector.performance || {};
+
+    const getColor = (val) => val >= 0 ? 'text-green-600' : 'text-red-600';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slideUp" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100 p-6 flex justify-between items-start">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                            {sector.name}
+                            <span className="text-sm font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{sector.etf}</span>
+                        </h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-8">
+                    {/* Main Chart Section */}
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <div className="text-sm text-gray-500 uppercase font-semibold tracking-wider">Performance Trend</div>
+                                <div className="text-xs text-gray-400 mt-1">1 Year Interactive History</div>
+                            </div>
+                            <div className={`text-4xl font-bold ${getColor(perf.ytd)}`}>
+                                {perf.ytd > 0 ? '+' : ''}{perf.ytd?.toFixed(2)}% <span className="text-sm font-medium text-gray-500">YTD Returns</span>
+                            </div>
+                        </div>
+                        <div className="h-72 w-full bg-white rounded-lg border border-gray-200 shadow-inner p-2 relative">
+                            {chartData.length > 0 ? (
+                                <>
+                                    {/* Min/Max Labels Overlay */}
+                                    <div className="absolute top-2 right-2 text-[10px] text-gray-400 font-mono">
+                                        High: ${Math.max(...chartData.map(d => d.value || 0)).toFixed(2)}
+                                    </div>
+                                    <div className="absolute bottom-2 right-2 text-[10px] text-gray-400 font-mono">
+                                        Low: ${Math.min(...chartData.map(d => d.value || 0)).toFixed(2)}
+                                    </div>
+                                    <Sparkline data={chartData} color={perf.ytd >= 0 ? '#16a34a' : '#dc2626'} />
+                                </>
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-gray-400">No chart data available</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { label: "Today", val: perf.todayChange },
+                            { label: "1 Week", val: perf.oneWeek },
+                            { label: "1 Month", val: perf.oneMonth },
+                            { label: "YTD", val: perf.ytd }
+                        ].map(m => (
+                            <div key={m.label} className={`p-4 rounded-xl border ${m.val >= 0 ? 'border-green-100 bg-green-50/50' : 'border-red-100 bg-red-50/50'} flex flex-col items-center justify-center text-center`}>
+                                <div className="text-xs text-gray-500 font-medium uppercase mb-1">{m.label}</div>
+                                <div className={`text-2xl font-bold ${getColor(m.val)}`}>
+                                    {m.val > 0 ? '+' : ''}{m.val?.toFixed(2)}%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Leaders List */}
+                    <div className="pt-4 border-t border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
+                            Top Market Movers
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {sector.leaders && sector.leaders.map(leader => (
+                                <div key={leader.symbol} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:shadow-sm transition-all bg-white group cursor-default">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-gray-50 group-hover:bg-blue-50 flex items-center justify-center font-bold text-gray-600 text-sm border border-gray-100">
+                                            {leader.symbol[0]}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-gray-900 group-hover:text-blue-700">{leader.symbol}</div>
+                                            <div className="text-xs text-gray-500 truncate w-32">{leader.name}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-mono font-medium text-gray-900 text-sm">${leader.price?.toFixed(2)}</div>
+                                        <div className={`text-xs font-bold ${getColor(leader.change)}`}>
+                                            {leader.change > 0 ? '+' : ''}{leader.change?.toFixed(2)}%
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const SectorDashboard = () => {
     const [sectors, setSectors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTimeframe, setActiveTimeframe] = useState('today'); // 'today', '1week', 'ytd'
+    const [selectedSector, setSelectedSector] = useState(null);
 
     useEffect(() => {
         const loadSectors = async () => {
@@ -223,7 +332,11 @@ const SectorDashboard = () => {
                         }
 
                         return (
-                            <div key={sector.name} className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between overflow-hidden hover:shadow-md transition-transform hover:-translate-y-1 h-36">
+                            <div
+                                key={sector.name}
+                                onClick={() => setSelectedSector(sector)}
+                                className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between overflow-hidden hover:shadow-md hover:border-blue-300 transition-all hover:-translate-y-1 h-36 cursor-pointer"
+                            >
                                 <div className="p-4 pb-0">
                                     <div className="flex justify-between items-center">
                                         <div className="text-xs font-bold text-gray-500 uppercase tracking-wider truncate mr-2" title={sector.name}>{sector.name}</div>
@@ -248,70 +361,8 @@ const SectorDashboard = () => {
                 </div>
             </div>
 
-            {/* Sector Details & Leaders */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sectors.map((sector) => (
-                    <div key={sector.name} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 bg-gray-50">
-                            <div className="flex justify-between items-center mb-3">
-                                <div>
-                                    <h3 className="font-bold text-gray-900">{sector.name}</h3>
-                                    <div className="text-xs text-gray-500">{sector.etf} Benchmark</div>
-                                </div>
-                            </div>
-                            {/* Performance Row */}
-                            <div className="flex gap-2">
-                                <div className={`flex-1 px-2 py-1.5 rounded text-center ${sector.performance?.todayChange >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                    <div className="text-xs text-gray-500 font-medium">Today</div>
-                                    <div className="text-sm font-bold">
-                                        {sector.performance?.todayChange > 0 ? '+' : ''}{sector.performance?.todayChange?.toFixed(1)}%
-                                    </div>
-                                </div>
-                                <div className={`flex-1 px-2 py-1.5 rounded text-center ${sector.performance?.oneWeek >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                    <div className="text-xs text-gray-500 font-medium">1 Week</div>
-                                    <div className="text-sm font-bold">
-                                        {sector.performance?.oneWeek > 0 ? '+' : ''}{sector.performance?.oneWeek?.toFixed(1)}%
-                                    </div>
-                                </div>
-                                <div className={`flex-1 px-2 py-1.5 rounded text-center ${sector.performance?.ytd >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                    <div className="text-xs text-gray-500 font-medium">YTD</div>
-                                    <div className="text-sm font-bold">
-                                        {sector.performance?.ytd > 0 ? '+' : ''}{sector.performance?.ytd?.toFixed(1)}%
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4">
-                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Market Leaders</div>
-                            <div className="space-y-3">
-                                {sector.leaders.map((leader) => (
-                                    <div key={leader.symbol} className="flex justify-between items-center text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                {leader.symbol[0]}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-gray-900">{leader.symbol}</div>
-                                                <div className="text-xs text-gray-500 truncate w-24">{leader.name}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-medium">${leader.price?.toFixed(2)}</div>
-                                            <div className={`text-xs ${leader.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                {leader.change >= 0 ? '+' : ''}{leader.change?.toFixed(2)}%
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {sector.leaders.length === 0 && (
-                                    <div className="text-sm text-gray-400 italic">No leaders data available</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {/* Detailed Modal */}
+            <SectorModal sector={selectedSector} onClose={() => setSelectedSector(null)} />
         </div>
     );
 };
