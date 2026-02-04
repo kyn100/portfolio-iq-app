@@ -406,13 +406,49 @@ const Dashboard = ({ session }) => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <p className="text-center text-sm text-gray-500">
-            PortfolioIQ v2.1 (Macro Edition) • Technical analysis is for informational purposes only. Not financial advice.
-          </p>
+      <footer className="bg-slate-900 text-slate-400 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Footer Content */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-white font-semibold">PortfolioIQ</div>
+                <div className="text-xs text-slate-500">v2.1 (Macro Edition)</div>
+              </div>
+            </div>
+            <div className="text-sm text-center md:text-right">
+              <span className="text-slate-300">Created by</span>{' '}
+              <a href="mailto:kuhotech@gmail.com" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                Kuho Tech, LLC
+              </a>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-slate-700 pt-6">
+            {/* Legal Disclaimers */}
+            <div className="text-xs text-slate-500 space-y-2 text-center">
+              <p>
+                <strong className="text-slate-400">Disclaimer:</strong> The information provided by PortfolioIQ is for informational and educational purposes only.
+                It does not constitute financial advice, investment advice, trading advice, or any other sort of advice.
+              </p>
+              <p>
+                Past performance is not indicative of future results. You should not make any investment decision based solely on the information provided here.
+                Always consult with a qualified financial advisor before making investment decisions.
+              </p>
+              <p className="pt-2 text-slate-600">
+                © {new Date().getFullYear()} Kuho Tech, LLC. All rights reserved. |
+                Market data provided by Yahoo Finance. AI analysis powered by Google Gemini.
+              </p>
+            </div>
+          </div>
         </div>
-      </footer >
+      </footer>
     </div >
   );
 };
