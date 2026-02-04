@@ -28,19 +28,19 @@ app.use(express.json());
 // Note: Some handlers strictly check req.method inside. `app.all` passes everything.
 // Some handlers manually set CORS headers. That's fine, Express CORS + manual headers might duplicate but usually works or manual overrides.
 
-app.all('/api/portfolio', portfolioHandler);
-app.all('/api/portfolio/:id', portfolioHandler); // Handle specific item operations if logic exists, typically portfolio.js handled method switching.
+app.use('/api/portfolio', portfolioHandler);
+// app.use matches subpaths, which is required for Routers.
+// Note: Handlers must be Express Routers or middleware-compatible.
 
-app.all('/api/watchlist', watchlistHandler);
-app.all('/api/watchlist/:symbol', watchlistHandler);
+app.use('/api/watchlist', watchlistHandler);
 
-app.all('/api/sectors', sectorsHandler);
-app.all('/api/insights', insightsHandler);
-app.all('/api/batch-quotes', batchQuotesHandler);
-app.all('/api/search', searchHandler);
-app.all('/api/trend-alerts', trendAlertsHandler);
-app.all('/api/health', healthHandler);
-app.all('/api/recommendations', recommendationsHandler);
+app.use('/api/sectors', sectorsHandler);
+app.use('/api/insights', insightsHandler);
+app.use('/api/batch-quotes', batchQuotesHandler);
+app.use('/api/search', searchHandler);
+app.use('/api/trend-alerts', trendAlertsHandler);
+app.use('/api/health', healthHandler);
+app.use('/api/recommendations', recommendationsHandler);
 
 // Stock Details
 app.all('/api/stocks/:symbol', stockDetailsHandler);
