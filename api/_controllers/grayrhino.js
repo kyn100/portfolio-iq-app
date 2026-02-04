@@ -148,18 +148,28 @@ For each of the 5 events listed above, provide:
 - keyFactors: Array of 3 specific bullet points explaining WHY the intensity is at this level
 - recentNews: Array of 2-3 realistic headlines based on current global situation
 
-Respond in valid JSON format containing ALL 5 events:
+Respond with a single valid JSON object containing an "events" array with exactly 5 items, one for each of these REQUIRED IDs:
+1. "debt-crisis"
+2. "climate-collapse"
+3. "demographics"
+4. "ai-control"
+5. "polarization"
+
+JSON Structure Template:
 {
   "events": [
     {
       "id": "debt-crisis",
-      "intensity": 75,
-      "trend": "accelerating",
-      "reasoning": "...",
-      "keyFactors": ["...", "...", "..."],
-      "recentNews": ["...", "..."]
+      "intensity": <number 1-100>,
+      "trend": <"accelerating"|"steady"|"decelerating">,
+      "reasoning": <string>,
+      "keyFactors": [<string>, <string>, <string>],
+      "recentNews": [<string>, <string>]
     },
-    ... (include all other events)
+    { "id": "climate-collapse", ... },
+    { "id": "demographics", ... },
+    { "id": "ai-control", ... },
+    { "id": "polarization", ... }
   ]
 }`;
 
