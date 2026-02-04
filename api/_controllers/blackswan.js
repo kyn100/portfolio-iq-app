@@ -1,11 +1,9 @@
 import { Router } from 'express';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 
 const router = Router();
-
-// Suppress warnings
-yahooFinance.suppressNotices(['yahooSurvey']);
+const yahooFinance = new YahooFinance();
 
 // Fetch news for a specific topic
 const fetchNewsForTopic = async (keywords, fallbackSymbol) => {
