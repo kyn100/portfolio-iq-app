@@ -217,7 +217,7 @@ export const fetchSectorAnalysis = async (sectorName, performance, leaders) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sector: sectorName, performance, leaders })
   });
-  if (!response.ok) throw new Error('Failed to fetch sector analysis');
+  if (!response.ok) throw new Error(`Failed to fetch sector analysis: ${response.status} ${response.statusText}`);
   return response.json();
 };
 
