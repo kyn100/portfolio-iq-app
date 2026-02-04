@@ -109,7 +109,16 @@ const assessGrayRhinoRisks = async () => {
     // Default fallback
     const fallbackEvents = GRAY_RHINO_EVENTS.map(event => ({
         ...event,
-        probability: { value: 50, trend: 'rising', reasoning: 'AI analysis unavailable' },
+        probability: {
+            value: 50,
+            trend: 'rising',
+            reasoning: 'AI analysis unavailable - showing default risk factors',
+            keyFactors: [
+                'Risk factor analysis unavailable',
+                'Historical trend data missing',
+                'Real-time metrics disconnected'
+            ]
+        },
         news: []
     }));
 
@@ -152,11 +161,16 @@ Respond in valid JSON format containing ALL 5 events:
 
         const result = await model.generateContent(prompt);
         const text = result.response.text();
+        console.log('Gray Rhino AI Response Length:', text.length);
 
         const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error('No JSON found');
+        if (!jsonMatch) {
+            console.error('Invalid JSON from AI:', text.substring(0, 200));
+            throw new Error('No JSON found');
+        }
 
         const analysis = JSON.parse(jsonMatch[0]);
+        console.log('Parsed Gray Rhino Events:', analysis.events ? analysis.events.length : 0);
 
         return GRAY_RHINO_EVENTS.map(event => {
             const aiData = analysis.events?.find(e => e.id === event.id) || {};

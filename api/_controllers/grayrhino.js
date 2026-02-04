@@ -113,7 +113,16 @@ const assessGrayRhinoRisks = async () => {
 
     const fallbackEvents = GRAY_RHINO_EVENTS.map(event => ({
         ...event,
-        probability: { value: 50, trend: 'rising', reasoning: 'AI analysis unavailable' },
+        probability: {
+            value: 50,
+            trend: 'rising',
+            reasoning: 'AI analysis unavailable - showing default risk factors',
+            keyFactors: [
+                'Risk factor analysis unavailable',
+                'Historical trend data missing',
+                'Real-time metrics disconnected'
+            ]
+        },
         news: []
     }));
 
