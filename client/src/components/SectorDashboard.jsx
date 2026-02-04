@@ -2,40 +2,99 @@ import React, { useState, useEffect } from 'react';
 import { fetchSectors } from '../services/api';
 
 const Sparkline = ({ data, color }) => {
+    const [hoverData, setHoverData] = useState(null);
+
+    // Data must be array of { date, value }
+    // If simple numbers passed, mapping will fail, so we handle safety in parent or here
     if (!data || data.length < 2) return null;
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+
+    // Handle both object format {date, value} and simple number format fallback
+    const normalizedData = typeof data[0] === 'number' ? data.map((v, i) => ({ value: v, date: new Date().toISOString() })) : data;
+    const values = normalizedData.map(d => d.value);
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
     const range = max - min || 1;
 
-    // Generate line path
-    const points = data.map((val, idx) => {
-        const x = (idx / (data.length - 1)) * 100;
-        const y = 100 - ((val - min) / range) * 80 - 10; // Reserve 10% padding top/bottom
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
+    // Coordinate Helpers
+    const getX = (idx) => (idx / (normalizedData.length - 1)) * 100;
+    const getY = (val) => 100 - ((val - min) / range) * 80 - 10; // Reserve padding
 
+    const points = values.map((val, idx) => `${getX(idx).toFixed(2)},${getY(val).toFixed(2)}`);
     const linePath = points.join(' ');
-    // Close the path for fill (start bottom-left, go to start, plot line, go to end, end bottom-right)
     const areaPath = `0,100 ${linePath} 100,100`;
 
+    const handleMouseMove = (e) => {
+        const svgRect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - svgRect.left;
+        const relativeX = Math.max(0, Math.min(1, x / svgRect.width));
+
+        const idx = Math.round(relativeX * (normalizedData.length - 1));
+        setHoverData({
+            ...normalizedData[idx],
+            x: getX(idx),
+            y: getY(values[idx])
+        });
+    };
+
     return (
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-            <polyline
-                points={areaPath}
-                fill={color}
-                fillOpacity="0.15"
-                stroke="none"
-            />
-            <polyline
-                points={linePath}
-                fill="none"
-                stroke={color}
-                strokeWidth="2.5"
-                vectorEffect="non-scaling-stroke"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
+        <div
+            className="relative w-full h-full group cursor-crosshair"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setHoverData(null)}
+        >
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+                <polyline points={areaPath} fill={color} fillOpacity="0.1" stroke="none" />
+                <polyline
+                    points={linePath}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="2"
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                {/* Hover Elements */}
+                {hoverData && (
+                    <>
+                        <line
+                            x1={hoverData.x} y1="0"
+                            x2={hoverData.x} y2="100"
+                            stroke="#6b7280"
+                            strokeWidth="1"
+                            strokeDasharray="4 4"
+                            vectorEffect="non-scaling-stroke"
+                        />
+                        <circle
+                            cx={hoverData.x} cy={hoverData.y}
+                            r="3"
+                            fill={color}
+                            stroke="white"
+                            strokeWidth="2"
+                            vectorEffect="non-scaling-stroke"
+                        />
+                    </>
+                )}
+            </svg>
+
+            {/* Tooltip */}
+            {hoverData && (
+                <div
+                    className="absolute bottom-full mb-1 left-0 z-50 pointer-events-none transform -translate-x-1/2"
+                    style={{ left: `${hoverData.x}%` }}
+                >
+                    <div className="bg-gray-900 text-white text-[10px] py-1 px-2 rounded shadow-xl whitespace-nowrap">
+                        <div className="font-bold">
+                            {new Date(hoverData.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
+                        <div className="font-mono">${hoverData.value.toFixed(2)}</div>
+                    </div>
+                    {/* Tiny triangle pointer */}
+                    <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-900 mx-auto"></div>
+                </div>
+            )}
+        </div>
     );
 };
 
@@ -138,11 +197,13 @@ const SectorDashboard = () => {
                             if (isObject) {
                                 if (activeTimeframe === 'ytd') {
                                     const year = new Date().getFullYear();
-                                    chartData = raw.filter(d => new Date(d.date).getFullYear() === year).map(d => d.value);
+                                    chartData = raw.filter(d => new Date(d.date).getFullYear() === year);
+                                } else if (activeTimeframe === '1week') {
+                                    // Show 1 Week Trend (5 days)
+                                    chartData = raw.slice(-5);
                                 } else {
-                                    // Show 1 Month Trend (approx 22 trading days) for 'Today' and '1 Week' tabs
-                                    // This gives a relevant short-term context
-                                    chartData = raw.slice(-22).map(d => d.value);
+                                    // Show 1 Month Trend (approx 22 trading days) for 'Today' tab context
+                                    chartData = raw.slice(-22);
                                 }
                             } else {
                                 chartData = raw;
