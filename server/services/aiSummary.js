@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') }); // explicitly load server/.env
 
 let genAIInstance = null;
-const getGenAI = () => {
+export const getGenAI = () => {
     if (!genAIInstance && process.env.GEMINI_API_KEY) {
         genAIInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     }
