@@ -12,6 +12,7 @@ import trendAlertsHandler from './_controllers/trend-alerts.js';
 import healthHandler from './_controllers/health.js';
 import stockDetailsHandler from './_controllers/stock-details.js';
 import recommendationsHandler from './_controllers/recommendations.js';
+import blackswanHandler from './_controllers/blackswan.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/api/search', searchHandler);
 app.use('/api/trend-alerts', trendAlertsHandler);
 app.use('/api/health', healthHandler);
 app.use('/api/recommendations', recommendationsHandler);
+app.use('/api/blackswan', blackswanHandler);
 
 // Stock Details
 app.all('/api/stocks/:symbol', stockDetailsHandler);
