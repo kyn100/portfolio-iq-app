@@ -95,23 +95,23 @@ const Dashboard = ({ session }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-lg border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">PortfolioIQ</h1>
-                  <p className="text-xs text-gray-500">v2.1 Macro Edition</p>
+                  <h1 className="text-xl font-bold text-white">PortfolioIQ</h1>
+                  <p className="text-xs text-slate-400">v2.1 Macro Edition</p>
                 </div>
               </div>
-              <div className="hidden sm:block h-8 w-px bg-gray-200"></div>
-              <p className="hidden sm:block text-sm text-gray-500">
+              <div className="hidden sm:block h-8 w-px bg-slate-600"></div>
+              <p className="hidden sm:block text-sm text-slate-300">
                 {session?.user?.email ? `${session.user.email} • ` : ''}
                 Smart Portfolio Monitor
               </p>
@@ -119,8 +119,7 @@ const Dashboard = ({ session }) => {
             <div className="flex gap-3">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 border border-red-200 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
-              >
+                className="flex items-center gap-2 px-4 py-2 border border-red-400/30 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -130,7 +129,7 @@ const Dashboard = ({ session }) => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing || loading}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition-colors"
               >
                 <svg
                   className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`}
@@ -147,6 +146,7 @@ const Dashboard = ({ session }) => {
                 </svg>
                 Refresh
               </button>
+
               <button
                 onClick={() => setShowAddForm(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -419,8 +419,16 @@ const Dashboard = ({ session }) => {
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Created By */}
+          <div className="text-center mb-4">
+            <span className="text-slate-300">Created by </span>
+            <a href="mailto:kuhotech@gmail.com" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+              Kuho Tech, LLC
+            </a>
+          </div>
+
           {/* Legal Disclaimers */}
-          <div className="text-xs text-slate-500 space-y-2 text-center">
+          <div className="text-xs text-slate-500 space-y-2 text-center border-t border-slate-700 pt-4">
             <p>
               <strong className="text-slate-400">Disclaimer:</strong> The information provided by PortfolioIQ is for informational and educational purposes only.
               It does not constitute financial advice, investment advice, trading advice, or any other sort of advice.
@@ -429,8 +437,8 @@ const Dashboard = ({ session }) => {
               Past performance is not indicative of future results. You should not make any investment decision based solely on the information provided here.
               Always consult with a qualified financial advisor before making investment decisions.
             </p>
-            <p className="pt-3 text-slate-400">
-              © {new Date().getFullYear()} <a href="mailto:kuhotech@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">Kuho Tech, LLC</a>. All rights reserved. |
+            <p className="pt-2 text-slate-400">
+              © {new Date().getFullYear()} Kuho Tech, LLC. All rights reserved. |
               Market data by Yahoo Finance. AI powered by Google Gemini.
             </p>
           </div>
