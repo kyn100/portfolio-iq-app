@@ -1,27 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { fetchSectors } from '../services/api';
 
-const Sparkline = ({ data }) => {
+const Sparkline = ({ data, color }) => {
     if (!data || data.length < 2) return null;
     const min = Math.min(...data);
     const max = Math.max(...data);
     const range = max - min || 1;
 
-    // Generate path
+    // Generate line path
     const points = data.map((val, idx) => {
         const x = (idx / (data.length - 1)) * 100;
-        const y = 100 - ((val - min) / range) * 100;
+        const y = 100 - ((val - min) / range) * 80 - 10; // Reserve 10% padding top/bottom
         return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+    });
+
+    const linePath = points.join(' ');
+    // Close the path for fill (start bottom-left, go to start, plot line, go to end, end bottom-right)
+    const areaPath = `0,100 ${linePath} 100,100`;
 
     return (
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
             <polyline
-                points={points}
+                points={areaPath}
+                fill={color}
+                fillOpacity="0.15"
+                stroke="none"
+            />
+            <polyline
+                points={linePath}
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
+                stroke={color}
+                strokeWidth="2.5"
                 vectorEffect="non-scaling-stroke"
+                strokeLinecap="round"
+                strokeLinejoin="round"
             />
         </svg>
     );
@@ -137,41 +149,37 @@ const SectorDashboard = () => {
                             }
                         }
 
-                        // Color scale (dynamic ranges)
-                        let bgClass = 'bg-gray-100';
+                        // Color styling
+                        let colorHex = '#6b7280'; // gray-500
+                        let textClass = 'text-gray-900';
 
-                        // Slightly stricter scale for YTD vs Today
-                        if (activeTimeframe === 'ytd') {
-                            if (val > 20) bgClass = 'bg-green-600 text-white';
-                            else if (val > 10) bgClass = 'bg-green-500 text-white';
-                            else if (val > 0) bgClass = 'bg-green-400 text-white';
-                            else if (val > -5) bgClass = 'bg-red-300 text-gray-900';
-                            else if (val > -15) bgClass = 'bg-red-400 text-white';
-                            else bgClass = 'bg-red-600 text-white';
-                        } else {
-                            // Scale for daily/weekly (smaller moves)
-                            if (val > 3) bgClass = 'bg-green-600 text-white';
-                            else if (val > 1.5) bgClass = 'bg-green-500 text-white';
-                            else if (val > 0) bgClass = 'bg-green-400 text-white';
-                            else if (val > -1.5) bgClass = 'bg-red-300 text-gray-900';
-                            else if (val > -3) bgClass = 'bg-red-400 text-white';
-                            else bgClass = 'bg-red-600 text-white';
+                        if (val > 0) {
+                            colorHex = '#16a34a'; // green-600
+                            textClass = 'text-green-600';
+                        } else if (val < 0) {
+                            colorHex = '#dc2626'; // red-600
+                            textClass = 'text-red-600';
                         }
 
                         return (
-                            <div key={sector.name} className={`${bgClass} relative p-4 rounded-lg flex flex-col items-center justify-center text-center transition-transform hover:scale-105 cursor-default overflow-hidden`}>
-                                {/* Sparkline Background */}
-                                {chartData.length > 0 && (
-                                    <div className="absolute inset-x-0 bottom-0 h-full opacity-25 p-0 pointer-events-none">
-                                        <Sparkline data={chartData} />
+                            <div key={sector.name} className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between overflow-hidden hover:shadow-md transition-transform hover:-translate-y-1 h-36">
+                                <div className="p-4 pb-0">
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider truncate mr-2" title={sector.name}>{sector.name}</div>
+                                        <div className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{sector.etf}</div>
                                     </div>
-                                )}
+                                    <div className={`text-2xl font-bold mt-1 ${textClass}`}>
+                                        {val > 0 ? '+' : ''}{val.toFixed(2)}%
+                                    </div>
+                                </div>
 
-                                {/* Content */}
-                                <div className="relative z-10">
-                                    <div className="text-xs font-semibold opacity-90 uppercase tracking-wider mb-1">{sector.name}</div>
-                                    <div className="text-lg font-bold">{val > 0 ? '+' : ''}{val.toFixed(2)}%</div>
-                                    <div className="text-xs opacity-75">{sector.etf}</div>
+                                {/* Area Chart */}
+                                <div className="h-14 w-full mt-auto opacity-90">
+                                    {chartData.length > 0 ? (
+                                        <Sparkline data={chartData} color={colorHex} />
+                                    ) : (
+                                        <div className="h-full bg-gray-50 border-t border-gray-100"></div>
+                                    )}
                                 </div>
                             </div>
                         );
