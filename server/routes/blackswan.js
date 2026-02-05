@@ -122,32 +122,28 @@ const assessBlackSwanProbabilities = async () => {
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-        const prompt = `You are a geopolitical and financial risk analyst. Assess the probability of these black swan events occurring within the next 12 months. Consider recent news, geopolitical tensions, and market conditions as of today.
+        const prompt = `You are a geopolitical and financial risk analyst. Assess the probability of these 5 black swan events occurring within the next 12 months.
 
 Events to analyze:
-1. Flash Crash by Algorithmic Trading - Sudden market crash from HFT algorithms
-2. Death of a Major World Leader - Unexpected death causing instability
-3. Bioengineered Pandemic - Lab-created pathogen outbreak
-4. Global Cyberattack on Infrastructure - Attack on power/financial systems
-5. China–Taiwan Military Conflict - Military confrontation over Taiwan
+1. "flash-crash" (Flash Crash by Algorithmic Trading)
+2. "leader-death" (Death of a Major World Leader)
+3. "pandemic" (Bioengineered Pandemic)
+4. "cyberattack" (Global Cyberattack on Infrastructure)
+5. "taiwan-conflict" (China–Taiwan Military Conflict)
 
-For each event, provide:
-- probability: number 1-100 representing percentage chance in next 12 months
-- trend: "rising", "stable", or "falling" compared to 6 months ago
-- reasoning: Brief 1-2 sentence explanation of current risk factors
-- recentNews: Array of 2-3 recent relevant headlines (fabricate realistic ones based on current geopolitical situation)
+For EACH event, provide:
+- "probability": 1-100 (percentage chance)
+- "trend": "rising" | "stable" | "falling"
+- "reasoning": 1 sentence summary
+- "keyFactors": Array of 3 short bullet points on WHY (risk drivers).
 
-Respond in valid JSON format:
+Respond with valid JSON containing "events" array with ALL 5 IDs. Do not include news.
+
+Example JSON structure:
 {
   "events": [
-    {
-      "id": "flash-crash",
-      "probability": 15,
-      "trend": "rising",
-      "reasoning": "Increased market volatility and AI trading adoption raise flash crash risks",
-      "recentNews": ["SEC Proposes New Circuit Breaker Rules", "Quant Funds See Record Inflows"]
-    },
-    ...
+    { "id": "flash-crash", "probability": 15, "trend": "rising", "reasoning": "...", "keyFactors": ["...", "...", "..."] },
+    ... (all 5 items)
   ]
 }`;
 
@@ -162,15 +158,26 @@ Respond in valid JSON format:
 
         // Merge AI analysis with event definitions
         return BLACK_SWAN_EVENTS.map(event => {
-            const aiData = analysis.events?.find(e => e.id === event.id) || {};
+            const aiData = analysis.events?.find(e => e.id === event.id);
+
+            // Fallback if AI missed an event
+            if (!aiData) {
+                return {
+                    ...event,
+                    probability: { value: 5, trend: 'stable', reasoning: 'Analysis temporarily unavailable' },
+                    news: []
+                };
+            }
+
             return {
                 ...event,
                 probability: {
                     value: aiData.probability || 5,
                     trend: aiData.trend || 'stable',
-                    reasoning: aiData.reasoning || 'Analysis pending'
+                    reasoning: aiData.reasoning || 'Analysis pending',
+                    keyFactors: aiData.keyFactors || []
                 },
-                news: aiData.recentNews || []
+                news: [] // AI news removed, filled by Yahoo Finance
             };
         });
     } catch (error) {

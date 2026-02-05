@@ -178,6 +178,21 @@ const BlackSwanDashboard = () => {
                         {/* Expanded Content */}
                         {expandedEvent === event.id && (
                             <div className="border-t border-gray-100 bg-gray-50 p-5 space-y-4 animate-fadeIn">
+
+                                {/* Key Risk Drivers */}
+                                {event.probability.keyFactors && event.probability.keyFactors.length > 0 && (
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                            <span>⚠️</span> Key Risk Drivers
+                                        </h4>
+                                        <ul className="list-disc list-inside space-y-1">
+                                            {event.probability.keyFactors.map((factor, i) => (
+                                                <li key={i} className="text-sm text-gray-700 leading-relaxed">{factor}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
                                 {/* Recent News */}
                                 <div>
                                     <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
