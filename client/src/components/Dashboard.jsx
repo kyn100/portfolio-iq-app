@@ -7,6 +7,7 @@ import TrendAlertsDashboard from './TrendAlertsDashboard';
 import AIWatchlistPanel from './AIWatchlistPanel';
 import BlackSwanDashboard from './BlackSwanDashboard';
 import GrayRhinoDashboard from './GrayRhinoDashboard';
+import SpecialEventsDashboard from './SpecialEventsDashboard';
 import {
   fetchPortfolio,
   addToPortfolio,
@@ -25,7 +26,10 @@ const Dashboard = ({ session }) => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('blackswan'); // Default to Black Swan Monitor
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState('events'); // Main Tab: 'events', 'sectors', 'trends', 'insights', 'watchlist', 'portfolio'
+  const [activeEventSubTab, setActiveEventSubTab] = useState('blackswan'); // Sub Tab for Events: 'blackswan', 'grayrhino', 'special'
 
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
 
@@ -164,27 +168,17 @@ const Dashboard = ({ session }) => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Tabs */}
+        {/* Main Tabs */}
         <div className="flex overflow-x-auto mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-1 touch-pan-x scrollbar-hide">
           <button
-            onClick={() => setActiveTab('blackswan')}
-            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'blackswan'
-              ? 'bg-red-600 text-white'
+            onClick={() => setActiveTab('events')}
+            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'events'
+              ? 'bg-indigo-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <span className="text-lg">🦢</span>
-            Black Swan
-          </button>
-          <button
-            onClick={() => setActiveTab('grayrhino')}
-            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'grayrhino'
-              ? 'bg-slate-700 text-white'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-          >
-            <span className="text-lg">🦏</span>
-            Gray Rhino
+            <span className="text-lg">🌍</span>
+            Events Tracking
           </button>
           <button
             onClick={() => setActiveTab('sectors')}
@@ -248,6 +242,41 @@ const Dashboard = ({ session }) => {
             Portfolio ({portfolioItems.length})
           </button>
         </div>
+
+        {/* Sub-Navigation for Events Tab */}
+        {activeTab === 'events' && (
+          <div className="flex justify-center mb-6">
+            <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
+              <button
+                onClick={() => setActiveEventSubTab('blackswan')}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'blackswan'
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+              >
+                🦢 Black Swan
+              </button>
+              <button
+                onClick={() => setActiveEventSubTab('grayrhino')}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'grayrhino'
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+              >
+                🦏 Gray Rhino
+              </button>
+              <button
+                onClick={() => setActiveEventSubTab('special')}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'special'
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+              >
+                🌟 Special Events
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Portfolio Summary (only show on portfolio tab) */}
         {activeTab === 'portfolio' && portfolioItems.length > 0 && summary && (
@@ -422,14 +451,13 @@ const Dashboard = ({ session }) => {
           </>
         )}
 
-        {/* Black Swan Tab Content */}
-        {activeTab === 'blackswan' && (
-          <BlackSwanDashboard key={lastRefreshed} />
-        )}
-
-        {/* Gray Rhino Tab Content */}
-        {activeTab === 'grayrhino' && (
-          <GrayRhinoDashboard key={lastRefreshed} />
+        {/* Unified Events Tab Logic */}
+        {activeTab === 'events' && (
+          <>
+            {activeEventSubTab === 'blackswan' && <BlackSwanDashboard key={lastRefreshed} />}
+            {activeEventSubTab === 'grayrhino' && <GrayRhinoDashboard key={lastRefreshed} />}
+            {activeEventSubTab === 'special' && <SpecialEventsDashboard key={lastRefreshed} />}
+          </>
         )}
 
         {/* Sectors Tab Content */}
