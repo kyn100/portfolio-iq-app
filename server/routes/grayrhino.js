@@ -127,45 +127,28 @@ const assessGrayRhinoRisks = async () => {
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-        const prompt = `You are a strategic risk analyst specializing in "Gray Rhinos" - highly probable, high-impact, yet neglected threats.
-        Analyze the current state of these slow-motion disasters:
+        const prompt = `You are a strategic risk analyst specializing in "Gray Rhinos".
+        Analyze these 5 slow-motion disasters:
 
-EVENTS TO ANALYZE:
-1. Global Sovereign Debt Crisis (Debt loads, defaults)
-2. Climate Change & Ecosystem Collapse (Weather extremes, resource scarcity)
-3. Aging Populations & Demographic Decline (Pension strain, labor shortage)
-4. Out-of-Control AI (Job loss, misalignment, security)
-5. Political Polarization & Institutional Decay (Civil unrest, gridlock)
+1. "debt-crisis" (Global Sovereign Debt)
+2. "climate-collapse" (Climate/Ecosystem)
+3. "demographics" (Aging/Demographics)
+4. "ai-control" (AI Risks)
+5. "polarization" (Political Drift)
 
-For each of the 5 events listed above, provide:
-- intensity: number 1-100 representing current severity/urgency (100 = critical breaking point)
-- trend: "accelerating", "steady", or "decelerating"
-- reasoning: Brief 1-2 sentence summary of the situation
-- keyFactors: Array of 3 specific bullet points explaining WHY the intensity is at this level
-- recentNews: Array of 2-3 realistic headlines based on current global situation
+For EACH event, provide:
+- "intensity": 1-100 (severity)
+- "trend": "accelerating" | "steady" | "decelerating"
+- "reasoning": 1 sentence summary
+- "keyFactors": Array of 3 short bullet points on WHY.
 
-Respond with a single valid JSON object containing an "events" array with exactly 5 items, one for each of these REQUIRED IDs:
-1. "debt-crisis"
-2. "climate-collapse"
-3. "demographics"
-4. "ai-control"
-5. "polarization"
+Respond with valid JSON containing "events" array with ALL 5 IDs. Do not include news.
 
-JSON Structure Template:
+Example JSON structure:
 {
   "events": [
-    {
-      "id": "debt-crisis",
-      "intensity": <number 1-100>,
-      "trend": <"accelerating"|"steady"|"decelerating">,
-      "reasoning": <string>,
-      "keyFactors": [<string>, <string>, <string>],
-      "recentNews": [<string>, <string>]
-    },
-    { "id": "climate-collapse", ... },
-    { "id": "demographics", ... },
-    { "id": "ai-control", ... },
-    { "id": "polarization", ... }
+    { "id": "debt-crisis", "intensity": 80, "trend": "accelerating", "reasoning": "...", "keyFactors": ["...", "...", "..."] },
+    ... (all 5 items)
   ]
 }`;
 
@@ -183,8 +166,18 @@ JSON Structure Template:
         console.log('Parsed Gray Rhino Events:', analysis.events ? analysis.events.length : 0);
 
         return GRAY_RHINO_EVENTS.map(event => {
-            const aiData = analysis.events?.find(e => e.id === event.id) || {};
-            // Map 'intensity' to 'probability.value' structure to reuse UI
+            const aiData = analysis.events?.find(e => e.id === event.id);
+
+            // If AI missed this event, use the fallback structure (which has the "unavailable" messages)
+            if (!aiData) {
+                const fallback = fallbackEvents.find(f => f.id === event.id);
+                return {
+                    ...event,
+                    probability: fallback.probability,
+                    news: []
+                };
+            }
+
             return {
                 ...event,
                 probability: {
@@ -193,7 +186,7 @@ JSON Structure Template:
                     reasoning: aiData.reasoning || 'Analysis pending',
                     keyFactors: aiData.keyFactors || []
                 },
-                news: aiData.recentNews || []
+                news: [] // AI news removed, will be filled by Yahoo Finance
             };
         });
     } catch (error) {
