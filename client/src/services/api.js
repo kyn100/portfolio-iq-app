@@ -240,6 +240,8 @@ export const getStockData = async (symbol) => {
   return response.json();
 };
 
+export const fetchStockDetails = getStockData;
+
 export const searchStocks = async (query) => {
   // Use Vercel API for search
   // Assuming we don't have a dedicated search endpoint, we might need one.
