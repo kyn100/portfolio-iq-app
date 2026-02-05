@@ -122,32 +122,32 @@ const BlackSwanDashboard = () => {
     return (
         <div className="space-y-6">
             {/* Header Card */}
-            <div className="bg-gradient-to-r from-slate-900 via-red-900/30 to-slate-900 rounded-xl shadow-lg border border-red-900/30 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
-                        <span className="text-3xl">🦢</span>
+                    <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                        <span className="text-3xl text-white">🦢</span>
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-white">Black Swan Monitor</h2>
-                        <p className="text-slate-400">AI-powered tail risk assessment for catastrophic market events</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Black Swan Monitor</h2>
+                        <p className="text-gray-500">AI-powered tail risk assessment for catastrophic market events</p>
                     </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        <span className="text-slate-300">High Risk: 50%+</span>
+                        <span className="text-gray-600">High Risk: 50%+</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                        <span className="text-slate-300">Elevated: 25-50%</span>
+                        <span className="text-gray-600">Elevated: 25-50%</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        <span className="text-slate-300">Moderate: 10-25%</span>
+                        <span className="text-gray-600">Moderate: 10-25%</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <span className="text-slate-300">Low: &lt;10%</span>
+                        <span className="text-gray-600">Low: &lt;10%</span>
                     </div>
                 </div>
             </div>

@@ -120,24 +120,24 @@ const GrayRhinoDashboard = () => {
     return (
         <div className="space-y-6">
             {/* Header Card */}
-            <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 rounded-xl shadow-lg border border-slate-600 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-slate-400 to-slate-600 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-900/30">
-                        <span className="text-3xl">🦏</span>
+                    <div className="w-14 h-14 bg-gray-500 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200">
+                        <span className="text-3xl text-white">🦏</span>
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-white">Gray Rhino Monitor</h2>
-                        <p className="text-slate-300">Tracking highly probable, high-impact, slow-motion disasters</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Gray Rhino Monitor</h2>
+                        <p className="text-gray-500">Tracking highly probable, high-impact, slow-motion disasters</p>
                     </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-600">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                        <span className="text-slate-300">Critical Intensity: 75%+</span>
+                        <span className="text-gray-600">Critical Intensity: 75%+</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-600">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                        <span className="text-slate-300">Elevated: 50-75%</span>
+                        <span className="text-gray-600">Elevated: 50-75%</span>
                     </div>
                 </div>
             </div>
