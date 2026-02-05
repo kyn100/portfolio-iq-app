@@ -193,61 +193,80 @@ const BlackSwanDashboard = () => {
                                     </div>
                                 )}
 
-                                {/* Recent News */}
-                                <div>
-                                    <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                        <span>📰</span> Latest Related News
-                                    </h4>
-                                    {event.news && event.news.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {event.news.map((item, i) => (
-                                                <a
-                                                    key={i}
-                                                    href={typeof item === 'object' ? item.link : '#'}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="block bg-white rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:shadow-sm transition-all"
-                                                >
-                                                    <p className="text-sm text-gray-800 font-medium line-clamp-2">
-                                                        {typeof item === 'object' ? item.title : item}
-                                                    </p>
-                                                    {typeof item === 'object' && (item.publisher || item.publishedAt) && (
-                                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                                                            {item.publisher && <span>{item.publisher}</span>}
-                                                            {item.publishedAt && <span>• {item.publishedAt}</span>}
-                                                        </p>
-                                                    )}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 italic">No recent news available</p>
-                                    )}
-                                </div>
+                                {/* Recent News & Hedging Instruments Grid */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Latest Related News - Compact Panel */}
+                                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                                        <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <span>📰</span> Latest Related News
+                                        </h4>
+                                        {event.news && event.news.length > 0 ? (
+                                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                {event.news.map((item, i) => (
+                                                    <a
+                                                        key={i}
+                                                        href={typeof item === 'object' ? item.link : '#'}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="block group"
+                                                    >
+                                                        <div className="flex flex-col gap-1 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                                            <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-600 line-clamp-2 leading-snug">
+                                                                {typeof item === 'object' ? item.title : item}
+                                                            </p>
+                                                            {typeof item === 'object' && (item.publisher || item.publishedAt) && (
+                                                                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                                                    {item.publisher && <span className="font-medium">{item.publisher}</span>}
+                                                                    {item.publishedAt && <span>• {new Date(item.publishedAt).toLocaleDateString()}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 italic p-2">No recent news available</p>
+                                        )}
+                                    </div>
 
-                                {/* Hedge Recommendations */}
-                                <div>
-                                    <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                        <span>🛡️</span> Hedging Instruments
-                                    </h4>
-                                    {event.hedges && event.hedges.length > 0 ? (
-                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                            {event.hedges.map(hedge => (
-                                                <div
-                                                    key={hedge.symbol}
-                                                    className="bg-white rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
-                                                >
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <span className="font-bold text-blue-600">{hedge.symbol}</span>
-                                                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{hedge.type}</span>
+                                    {/* Hedging Instruments - Stock Card Style */}
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                            <span>🛡️</span> Hedging Instruments
+                                        </h4>
+                                        {event.hedges && event.hedges.length > 0 ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {event.hedges.map(hedge => (
+                                                    <div
+                                                        key={hedge.symbol}
+                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group cursor-pointer"
+                                                    >
+                                                        <div className="p-3">
+                                                            <div className="flex justify-between items-start mb-1">
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{hedge.symbol}</h3>
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-500 truncate max-w-[120px]" title={hedge.name}>{hedge.name}</p>
+                                                                </div>
+                                                                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
+                                                                    {hedge.type === 'Inverse ETF' ? 'Bear' : hedge.type === 'Volatility ETN' ? 'Vol' : 'Hedge'}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Mock Price Data / Visual Placeholder since we don't fetch real prices for these yet */}
+                                                            <div className="mt-2 flex items-baseline gap-2">
+                                                                <span className="text-sm font-bold text-gray-700">View Quote</span>
+                                                                <span className="text-xs text-blue-500 group-hover:translate-x-1 transition-transform">→</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 truncate" title={hedge.name}>{hedge.name}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 italic">No hedging instruments available</p>
-                                    )}
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 italic">No hedging instruments available</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
