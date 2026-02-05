@@ -206,6 +206,15 @@ const GrayRhinoDashboard = () => {
                                 <span className="text-lg">🤖</span>
                                 <p className="text-gray-600 italic">{event.probability.reasoning}</p>
                             </div>
+
+                            {/* Expand Indicator */}
+                            {expandedEvent !== event.id && (
+                                <div className="mt-3 flex justify-end animate-fadeIn">
+                                    <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">
+                                        More...
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Expanded Content */}
