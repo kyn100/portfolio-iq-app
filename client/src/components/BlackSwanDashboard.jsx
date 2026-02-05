@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { fetchBlackSwanEvents } from '../services/api';
+import { fetchBlackSwanEvents, fetchStockDetails } from '../services/api';
+import TechnicalChart from './TechnicalChart';
 
 const BlackSwanDashboard = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedEvent, setExpandedEvent] = useState(null);
+    const [hedgeData, setHedgeData] = useState({});
+    const [loadingHedges, setLoadingHedges] = useState({});
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -21,6 +24,38 @@ const BlackSwanDashboard = () => {
         };
         loadEvents();
     }, []);
+
+    const handleExpand = async (eventId) => {
+        if (expandedEvent === eventId) {
+            setExpandedEvent(null);
+            return;
+        }
+
+        setExpandedEvent(eventId);
+
+        // Fetch hedge data if not already loaded
+        const event = events.find(e => e.id === eventId);
+        if (event && event.hedges && !hedgeData[eventId]) {
+            setLoadingHedges(prev => ({ ...prev, [eventId]: true }));
+            try {
+                const updatedHedges = {};
+                await Promise.all(event.hedges.map(async (hedge) => {
+                    try {
+                        const details = await fetchStockDetails(hedge.symbol);
+                        updatedHedges[hedge.symbol] = details;
+                    } catch (e) {
+                        console.error(`Failed to fetch details for ${hedge.symbol}`, e);
+                        updatedHedges[hedge.symbol] = { error: true };
+                    }
+                }));
+                setHedgeData(prev => ({ ...prev, [eventId]: updatedHedges }));
+            } catch (err) {
+                console.error("Error fetching hedges", err);
+            } finally {
+                setLoadingHedges(prev => ({ ...prev, [eventId]: false }));
+            }
+        }
+    };
 
     const getProbabilityColor = (value) => {
         if (value >= 50) return 'text-red-500 bg-red-500/10 border-red-500/30';
@@ -121,7 +156,7 @@ const BlackSwanDashboard = () => {
                         {/* Main Content */}
                         <div
                             className="p-5 cursor-pointer"
-                            onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                            onClick={() => handleExpand(event.id)}
                         >
                             <div className="flex items-start gap-4">
                                 {/* Icon */}
@@ -177,95 +212,127 @@ const BlackSwanDashboard = () => {
 
                         {/* Expanded Content */}
                         {expandedEvent === event.id && (
-                            <div className="border-t border-gray-100 bg-gray-50 p-5 space-y-4 animate-fadeIn">
-
-                                {/* Key Risk Drivers */}
-                                {event.probability.keyFactors && event.probability.keyFactors.length > 0 && (
-                                    <div>
-                                        <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                            <span>⚠️</span> Key Risk Drivers
-                                        </h4>
-                                        <ul className="list-disc list-inside space-y-1">
-                                            {event.probability.keyFactors.map((factor, i) => (
-                                                <li key={i} className="text-sm text-gray-700 leading-relaxed">{factor}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {/* Recent News & Hedging Instruments Grid */}
+                            <div className="border-t border-gray-100 bg-gray-50 p-5 animate-fadeIn">
+                                {/* Two Column Layout */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Latest Related News - Compact Panel */}
-                                    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                                        <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <span>📰</span> Latest Related News
-                                        </h4>
-                                        {event.news && event.news.length > 0 ? (
-                                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                                {event.news.map((item, i) => (
-                                                    <a
-                                                        key={i}
-                                                        href={typeof item === 'object' ? item.link : '#'}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="block group"
-                                                    >
-                                                        <div className="flex flex-col gap-1 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                                                            <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-600 line-clamp-2 leading-snug">
-                                                                {typeof item === 'object' ? item.title : item}
-                                                            </p>
-                                                            {typeof item === 'object' && (item.publisher || item.publishedAt) && (
-                                                                <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                                                                    {item.publisher && <span className="font-medium">{item.publisher}</span>}
-                                                                    {item.publishedAt && <span>• {new Date(item.publishedAt).toLocaleDateString()}</span>}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </a>
-                                                ))}
+
+                                    {/* LEFT COLUMN: Risk Drivers & News */}
+                                    <div className="space-y-6">
+
+                                        {/* Key Risk Drivers */}
+                                        {event.probability.keyFactors && event.probability.keyFactors.length > 0 && (
+                                            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                                                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                                    <span>⚠️</span> Key Risk Drivers
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {event.probability.keyFactors.map((factor, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
+                                                            <span className="leading-relaxed">{factor}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 italic p-2">No recent news available</p>
                                         )}
+
+                                        {/* Latest Related News */}
+                                        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                                            <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                                <span>📰</span> Latest Related News
+                                            </h4>
+                                            {event.news && event.news.length > 0 ? (
+                                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {event.news.map((item, i) => (
+                                                        <a
+                                                            key={i}
+                                                            href={typeof item === 'object' ? item.link : '#'}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="block group"
+                                                        >
+                                                            <div className="flex flex-col gap-1 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                                                <p className="text-xs font-semibold text-gray-800 group-hover:text-blue-600 line-clamp-2 leading-snug">
+                                                                    {typeof item === 'object' ? item.title : item}
+                                                                </p>
+                                                                {typeof item === 'object' && (item.publisher || item.publishedAt) && (
+                                                                    <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                                                        {item.publisher && <span className="font-medium">{item.publisher}</span>}
+                                                                        {item.publishedAt && <span>• {new Date(item.publishedAt).toLocaleDateString()}</span>}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-gray-500 italic p-2">No recent news available</p>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    {/* Hedging Instruments - Stock Card Style */}
+                                    {/* RIGHT COLUMN: Hedging Instruments */}
                                     <div>
-                                        <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                            <span>🛡️</span> Hedging Instruments
-                                        </h4>
-                                        {event.hedges && event.hedges.length > 0 ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {event.hedges.map(hedge => (
-                                                    <div
-                                                        key={hedge.symbol}
-                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group cursor-pointer"
-                                                    >
-                                                        <div className="p-3">
-                                                            <div className="flex justify-between items-start mb-1">
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{hedge.symbol}</h3>
-                                                                    </div>
-                                                                    <p className="text-xs text-gray-500 truncate max-w-[120px]" title={hedge.name}>{hedge.name}</p>
-                                                                </div>
-                                                                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
-                                                                    {hedge.type === 'Inverse ETF' ? 'Bear' : hedge.type === 'Volatility ETN' ? 'Vol' : 'Hedge'}
-                                                                </span>
-                                                            </div>
+                                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 h-full">
+                                            <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                                <span>🛡️</span> Hedging Instruments
+                                            </h4>
 
-                                                            {/* Mock Price Data / Visual Placeholder since we don't fetch real prices for these yet */}
-                                                            <div className="mt-2 flex items-baseline gap-2">
-                                                                <span className="text-sm font-bold text-gray-700">View Quote</span>
-                                                                <span className="text-xs text-blue-500 group-hover:translate-x-1 transition-transform">→</span>
+                                            {loadingHedges[event.id] ? (
+                                                <div className="space-y-3">
+                                                    {[1, 2, 3].map(i => (
+                                                        <div key={i} className="bg-white rounded-xl h-40 animate-pulse border border-gray-200"></div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {event.hedges && event.hedges.map(hedge => {
+                                                        const detail = hedgeData[event.id]?.[hedge.symbol];
+                                                        const hasChartConf = detail && detail.historicalData && detail.historicalData.length > 0;
+
+                                                        return (
+                                                            <div
+                                                                key={hedge.symbol}
+                                                                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group cursor-pointer"
+                                                            >
+                                                                <div className="p-3">
+                                                                    <div className="flex justify-between items-start mb-2">
+                                                                        <div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{hedge.symbol}</h3>
+                                                                                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
+                                                                                    {hedge.type === 'Inverse ETF' ? 'Bear' : hedge.type === 'Volatility ETN' ? 'Vol' : 'Hedge'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-xs text-gray-500 truncate max-w-[200px]" title={hedge.name}>{hedge.name}</p>
+                                                                        </div>
+                                                                        {detail && detail.currentPrice && (
+                                                                            <div className="text-right">
+                                                                                <div className="font-bold text-sm">${detail.currentPrice.toFixed(2)}</div>
+                                                                                <div className={`text-xs ${detail.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                                    {detail.change >= 0 ? '+' : ''}{detail.changePercent?.toFixed(2)}%
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Chart Area */}
+                                                                    <div className="h-16 w-full mt-2">
+                                                                        {hasChartConf ? (
+                                                                            <TechnicalChart data={detail.historicalData} mini={true} />
+                                                                        ) : (
+                                                                            <div className="h-full w-full bg-gray-50 rounded flex items-center justify-center text-xs text-gray-400">
+                                                                                Chart unavailable
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-gray-500 italic">No hedging instruments available</p>
-                                        )}
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
