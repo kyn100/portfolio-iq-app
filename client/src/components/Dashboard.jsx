@@ -245,35 +245,45 @@ const Dashboard = ({ session }) => {
 
         {/* Sub-Navigation for Events Tab */}
         {activeTab === 'events' && (
-          <div className="flex justify-center mb-6">
-            <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
-              <button
-                onClick={() => setActiveEventSubTab('blackswan')}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'blackswan'
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-              >
-                🦢 Black Swan
-              </button>
-              <button
-                onClick={() => setActiveEventSubTab('grayrhino')}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'grayrhino'
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-              >
-                🦏 Gray Rhino
-              </button>
-              <button
-                onClick={() => setActiveEventSubTab('special')}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeEventSubTab === 'special'
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-              >
-                🌟 Special Events
-              </button>
+          <div className="mb-8">
+            <div className="border-b border-gray-200">
+              <div className="flex justify-center -mb-px space-x-8">
+                <button
+                  onClick={() => setActiveEventSubTab('blackswan')}
+                  className={`group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ease-in-out ${activeEventSubTab === 'blackswan'
+                    ? 'border-red-500 text-red-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] transition-colors ${activeEventSubTab === 'blackswan' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                    }`}>🦢</span>
+                  <span>Black Swan Monitor</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveEventSubTab('grayrhino')}
+                  className={`group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ease-in-out ${activeEventSubTab === 'grayrhino'
+                    ? 'border-slate-600 text-slate-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] transition-colors ${activeEventSubTab === 'grayrhino' ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                    }`}>🦏</span>
+                  <span>Gray Rhino Monitor</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveEventSubTab('special')}
+                  className={`group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ease-in-out ${activeEventSubTab === 'special'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  <span className={`flex items-center justify-center w-6 h-6 rounded-md text-[10px] transition-colors ${activeEventSubTab === 'special' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                    }`}>🌟</span>
+                  <span>Special Events</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
