@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchBlackSwanEvents, fetchStockDetails } from '../services/api';
-import TechnicalChart from './TechnicalChart';
+import Sparkline from './Sparkline';
 
 const BlackSwanDashboard = () => {
     const [events, setEvents] = useState([]);
@@ -285,47 +285,50 @@ const BlackSwanDashboard = () => {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <div className="space-y-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
                                                     {event.hedges && event.hedges.map(hedge => {
                                                         const detail = hedgeData[event.id]?.[hedge.symbol];
                                                         const hasChartConf = detail && detail.historicalData && detail.historicalData.length > 0;
+                                                        const change = detail?.change || 0;
+                                                        const color = change >= 0 ? '#16a34a' : '#dc2626';
+                                                        const textColor = change >= 0 ? 'text-green-600' : 'text-red-600';
+
+                                                        // Map data for Sparkline
+                                                        const chartData = hasChartConf ? detail.historicalData.map(d => ({ value: d.close, date: d.date })) : [];
 
                                                         return (
                                                             <div
                                                                 key={hedge.symbol}
-                                                                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group cursor-pointer"
+                                                                className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between overflow-hidden hover:shadow-xl hover:border-blue-400 transition-all hover:-translate-y-1 h-36 cursor-pointer group"
                                                             >
-                                                                <div className="p-3">
-                                                                    <div className="flex justify-between items-start mb-2">
-                                                                        <div>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{hedge.symbol}</h3>
-                                                                                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
-                                                                                    {hedge.type === 'Inverse ETF' ? 'Bear' : hedge.type === 'Volatility ETN' ? 'Vol' : 'Hedge'}
-                                                                                </span>
-                                                                            </div>
-                                                                            <p className="text-xs text-gray-500 truncate max-w-[200px]" title={hedge.name}>{hedge.name}</p>
+                                                                <div className="p-4 pb-0 relative z-10 w-full">
+                                                                    <div className="flex justify-between items-center w-full">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{hedge.symbol}</h3>
+                                                                            <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium whitespace-nowrap">
+                                                                                {hedge.type === 'Inverse ETF' ? 'Bear' : hedge.type === 'Volatility ETN' ? 'Vol' : 'Hedge'}
+                                                                            </span>
                                                                         </div>
-                                                                        {detail && detail.currentPrice && (
-                                                                            <div className="text-right">
-                                                                                <div className="font-bold text-sm">${detail.currentPrice.toFixed(2)}</div>
-                                                                                <div className={`text-xs ${detail.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                                    {detail.change >= 0 ? '+' : ''}{detail.changePercent?.toFixed(2)}%
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
                                                                     </div>
+                                                                    {detail && detail.currentPrice ? (
+                                                                        <div className={`text-xl font-bold mt-1 ${textColor}`}>
+                                                                            {detail.change >= 0 ? '+' : ''}{detail.changePercent?.toFixed(2)}%
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-sm text-gray-400 mt-2">--</div>
+                                                                    )}
+                                                                    <div className="text-xs text-gray-500 truncate" title={hedge.name}>{hedge.name}</div>
+                                                                </div>
 
-                                                                    {/* Chart Area */}
-                                                                    <div className="h-16 w-full mt-2">
-                                                                        {hasChartConf ? (
-                                                                            <TechnicalChart data={detail.historicalData} mini={true} />
-                                                                        ) : (
-                                                                            <div className="h-full w-full bg-gray-50 rounded flex items-center justify-center text-xs text-gray-400">
-                                                                                Chart unavailable
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
+                                                                {/* Chart Area */}
+                                                                <div className="h-14 w-full mt-auto">
+                                                                    {hasChartConf ? (
+                                                                        <Sparkline data={chartData} color={color} />
+                                                                    ) : (
+                                                                        <div className="h-full bg-gray-50 border-t border-gray-100 flex items-center justify-center text-[10px] text-gray-400">
+                                                                            No Data
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         );
