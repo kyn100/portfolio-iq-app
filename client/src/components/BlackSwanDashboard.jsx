@@ -64,6 +64,13 @@ const BlackSwanDashboard = () => {
         return 'text-green-500 bg-green-500/10 border-green-500/30';
     };
 
+    const getProgressBarColor = (value) => {
+        if (value >= 50) return 'bg-red-500';
+        if (value >= 25) return 'bg-orange-500';
+        if (value >= 10) return 'bg-yellow-500';
+        return 'bg-green-500';
+    };
+
     const getTrendIcon = (trend) => {
         switch (trend) {
             case 'rising': return <span className="text-red-500">↑</span>;
@@ -173,13 +180,19 @@ const BlackSwanDashboard = () => {
                                     <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
                                 </div>
 
-                                {/* Probability Badge */}
-                                <div className={`flex flex-col items-end gap-1 flex-shrink-0 px-4 py-2 rounded-xl border ${getProbabilityColor(event.probability.value)}`}>
-                                    <div className="flex items-center gap-1">
-                                        <span className="text-2xl font-bold">{event.probability.value}%</span>
+                                {/* Probability Progress Bar */}
+                                <div className="flex flex-col items-end min-w-[140px]">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-2xl font-black text-gray-900 tracking-tight">{event.probability.value}%</span>
                                         {getTrendIcon(event.probability.trend)}
                                     </div>
-                                    <span className="text-xs font-semibold uppercase tracking-wider">
+                                    <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-100/50">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ease-out ${getProgressBarColor(event.probability.value)}`}
+                                            style={{ width: `${event.probability.value}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mt-1.5 flex items-center gap-1">
                                         {getProbabilityLabel(event.probability.value)}
                                     </span>
                                 </div>

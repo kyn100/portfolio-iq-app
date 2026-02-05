@@ -63,6 +63,12 @@ const GrayRhinoDashboard = () => {
         return 'text-gray-500 bg-gray-50 border-gray-200';
     };
 
+    const getIntensityBarColor = (value) => {
+        if (value >= 75) return 'bg-orange-500';
+        if (value >= 50) return 'bg-slate-500';
+        return 'bg-gray-400';
+    };
+
     const getTrendIcon = (trend) => {
         switch (trend) {
             case 'accelerating': return <span className="text-orange-500 font-bold">↑↑</span>;
@@ -164,13 +170,19 @@ const GrayRhinoDashboard = () => {
                                     <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
                                 </div>
 
-                                {/* Intensity Badge */}
-                                <div className={`flex flex-col items-end gap-1 flex-shrink-0 px-4 py-2 rounded-xl border ${getIntensityColor(event.probability.value)}`}>
-                                    <div className="flex items-center gap-1">
-                                        <span className="text-2xl font-bold">{event.probability.value}%</span>
+                                {/* Intensity Progress Bar */}
+                                <div className="flex flex-col items-end min-w-[140px]">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-2xl font-black text-gray-900 tracking-tight">{event.probability.value}%</span>
                                         {getTrendIcon(event.probability.trend)}
                                     </div>
-                                    <span className="text-xs font-semibold uppercase tracking-wider">
+                                    <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-100/50">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ease-out ${getIntensityBarColor(event.probability.value)}`}
+                                            style={{ width: `${event.probability.value}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mt-1.5 flex items-center gap-1">
                                         {getIntensityLabel(event.probability.value)}
                                     </span>
                                 </div>
