@@ -8,6 +8,8 @@ import AIWatchlistPanel from './AIWatchlistPanel';
 import BlackSwanDashboard from './BlackSwanDashboard';
 import GrayRhinoDashboard from './GrayRhinoDashboard';
 import SpecialEventsDashboard from './SpecialEventsDashboard';
+import FocusListDashboard from './FocusListDashboard';
+import HomeDashboard from './HomeDashboard';
 import {
   fetchPortfolio,
   addToPortfolio,
@@ -15,6 +17,9 @@ import {
   fetchWatchlist,
   addToWatchlist,
   removeFromWatchlist,
+  fetchFocusList,
+  addToFocusList,
+  removeFromFocusList,
 } from '../services/api';
 
 import { supabase } from '../supabase';
@@ -22,13 +27,15 @@ import { supabase } from '../supabase';
 const Dashboard = ({ session }) => {
   const [portfolio, setPortfolio] = useState({ items: [], summary: {} });
   const [watchlist, setWatchlist] = useState({ items: [] });
+  const [focusList, setFocusList] = useState({ items: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [tradingStock, setTradingStock] = useState(null); // Updated state for tracking stock being traded from Focus List
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('events'); // Main Tab: 'events', 'sectors', 'trends', 'insights', 'watchlist', 'portfolio'
+  const [activeTab, setActiveTab] = useState('home'); // Main Tab: 'home', 'events', 'sectors', 'trends', 'insights', 'watchlist', 'focus-list', 'portfolio'
   const [activeEventSubTab, setActiveEventSubTab] = useState('blackswan'); // Sub Tab for Events: 'blackswan', 'grayrhino', 'special'
 
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
@@ -36,12 +43,14 @@ const Dashboard = ({ session }) => {
   const loadData = useCallback(async () => {
     try {
       setError(null);
-      const [portfolioData, watchlistData] = await Promise.all([
+      const [portfolioData, watchlistData, focusListData] = await Promise.all([
         fetchPortfolio(),
         fetchWatchlist(),
+        fetchFocusList(),
       ]);
       setPortfolio(portfolioData);
       setWatchlist(watchlistData);
+      setFocusList(focusListData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -71,6 +80,13 @@ const Dashboard = ({ session }) => {
 
   const handleAddToPortfolio = async (symbol, quantity, purchasePrice) => {
     await addToPortfolio(symbol, quantity, purchasePrice);
+
+    // If we're executing a trade from the Focus List, remove it from there
+    if (tradingStock && tradingStock.symbol === symbol) {
+      await removeFromFocusList(tradingStock.id);
+      setTradingStock(null);
+    }
+
     await loadData();
     setShowAddForm(false);
   };
@@ -95,8 +111,27 @@ const Dashboard = ({ session }) => {
     }
   };
 
+  const handleAddToFocusList = async (symbol, notes, targetPrice, stopLoss) => {
+    await addToFocusList(symbol, notes, targetPrice, stopLoss);
+    await loadData();
+    setShowAddForm(false);
+  };
+
+  const handleRemoveFromFocusList = async (id) => {
+    if (window.confirm('Are you sure you want to remove this stock from your focus list?')) {
+      await removeFromFocusList(id);
+      await loadData();
+    }
+  };
+
+  const handleStartTrade = (stock) => {
+    setTradingStock(stock);
+    setShowAddForm(true);
+  };
+
   const { summary, items: portfolioItems } = portfolio;
   const { items: watchlistItems } = watchlist;
+  const { items: focusListItems } = focusList;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +140,11 @@ const Dashboard = ({ session }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
+              <button
+                onClick={() => setActiveTab('home')}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none"
+                title="Go to Home"
+              >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -115,7 +154,7 @@ const Dashboard = ({ session }) => {
                   <h1 className="text-xl font-bold text-white">PortfolioIQ</h1>
                   <p className="text-xs text-slate-400">v2.1 Macro Edition</p>
                 </div>
-              </div>
+              </button>
               <div className="hidden sm:block h-8 w-px bg-slate-600"></div>
               <p className="hidden sm:block text-sm text-slate-300">
                 {session?.user?.email ? `${session.user.email} • ` : ''}
@@ -171,6 +210,56 @@ const Dashboard = ({ session }) => {
         {/* Main Tabs */}
         <div className="flex overflow-x-auto mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-1 touch-pan-x scrollbar-hide">
           <button
+            onClick={() => setActiveTab('home')}
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'home'
+              ? 'bg-slate-700 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <span className="text-lg">🏠</span>
+            Home
+          </button>
+
+          <button
+            onClick={() => setActiveTab('sectors')}
+            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'sectors'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'sectors' ? 'text-blue-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Market Sectors
+          </button>
+
+          <button
+            onClick={() => setActiveTab('trends')}
+            className={`flex-1 min-w-[130px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'trends'
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'trends' ? 'text-purple-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Trend Alerts
+          </button>
+
+          <button
+            onClick={() => setActiveTab('insights')}
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'insights'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+          >
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'insights' ? 'text-cyan-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            Insights
+          </button>
+
+          <button
             onClick={() => setActiveTab('events')}
             className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'events'
               ? 'bg-indigo-600 text-white'
@@ -180,42 +269,20 @@ const Dashboard = ({ session }) => {
             <span className="text-lg">🌍</span>
             Events Tracking
           </button>
+
           <button
-            onClick={() => setActiveTab('sectors')}
-            className={`flex-1 min-w-[140px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'sectors'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Market Sectors
-          </button>
-          <button
-            onClick={() => setActiveTab('trends')}
-            className={`flex-1 min-w-[130px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'trends'
+            onClick={() => setActiveTab('focus-list')}
+            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'focus-list'
               ? 'bg-purple-600 text-white'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'focus-list' ? 'text-amber-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Trend Alerts
+            Focus List ({focusListItems?.length || 0})
           </button>
-          <button
-            onClick={() => setActiveTab('insights')}
-            className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'insights'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            Insights
-          </button>
+
           <button
             onClick={() => setActiveTab('watchlist')}
             className={`flex-1 min-w-[120px] flex-shrink-0 py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'watchlist'
@@ -223,7 +290,7 @@ const Dashboard = ({ session }) => {
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'watchlist' ? 'text-emerald-500' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
@@ -236,7 +303,7 @@ const Dashboard = ({ session }) => {
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-5 h-5 flex-shrink-0 ${activeTab !== 'portfolio' ? 'text-green-600' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Portfolio ({portfolioItems.length})
@@ -281,6 +348,11 @@ const Dashboard = ({ session }) => {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Home Tab Content */}
+        {activeTab === 'home' && (
+          <HomeDashboard key={lastRefreshed} portfolioSummary={summary} setActiveTab={setActiveTab} />
         )}
 
         {/* Portfolio Summary (only show on portfolio tab) */}
@@ -353,7 +425,11 @@ const Dashboard = ({ session }) => {
               <AddStockForm
                 onAddToPortfolio={handleAddToPortfolio}
                 onAddToWatchlist={handleAddToWatchlist}
-                onCancel={() => setShowAddForm(false)}
+                onAddToFocusList={handleAddToFocusList}
+                initialMode={tradingStock ? 'portfolio' : (activeTab === 'focus-list' ? 'focus-list' : activeTab === 'watchlist' ? 'watchlist' : 'portfolio')}
+                initialSymbol={tradingStock ? tradingStock.symbol : ''}
+                initialPrice={tradingStock ? tradingStock.target_price : ''}
+                onCancel={() => { setShowAddForm(false); setTradingStock(null); }}
               />
             </div>
           </div>
@@ -463,6 +539,17 @@ const Dashboard = ({ session }) => {
             {activeEventSubTab === 'grayrhino' && <GrayRhinoDashboard key={lastRefreshed} />}
             {activeEventSubTab === 'special' && <SpecialEventsDashboard key={lastRefreshed} />}
           </>
+        )}
+
+        {/* Focus List Tab Content */}
+        {activeTab === 'focus-list' && !loading && (
+          <FocusListDashboard
+            items={focusListItems || []}
+            onRemove={handleRemoveFromFocusList}
+            onAdd={handleAddToFocusList}
+            onTrade={handleStartTrade}
+            onAddClick={() => setShowAddForm(true)}
+          />
         )}
 
         {/* Sectors Tab Content */}

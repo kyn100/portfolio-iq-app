@@ -188,6 +188,28 @@ const ETF_SECTORS = {
   'VTI': 'Broad Market', 'DIA': 'Broad Market', 'IWM': 'Broad Market',
 };
 
+// Lightweight quote fetch for AI analysis context
+export const getBasicQuote = async (symbol) => {
+  try {
+    const quote = await yahooFinance.quote(symbol);
+    if (!quote) throw new Error("No quote found");
+
+    return {
+      symbol: quote.symbol,
+      name: quote.longName || quote.shortName || quote.symbol,
+      regularMarketPrice: quote.regularMarketPrice,
+      price: quote.regularMarketPrice,
+      formattedPrice: quote.regularMarketPrice, // simplified
+      changePercent: quote.regularMarketChangePercent,
+      marketCap: quote.marketCap,
+      sector: STOCK_SECTORS[symbol.toUpperCase()] || ETF_SECTORS[symbol.toUpperCase()] || 'Unknown'
+    };
+  } catch (e) {
+    console.error(`Basic Quote Error for ${symbol}:`, e.message);
+    throw new Error(`Failed to fetch basic quote for ${symbol}`);
+  }
+};
+
 export const getStockQuote = async (symbol) => {
   try {
     // Fetch chart (1y), quote (for details), and Finnhub fundamentals in parallel

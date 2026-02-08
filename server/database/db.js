@@ -31,6 +31,20 @@ db.exec(`
   )
 `);
 
+
+// Create focus list table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS focus_list (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol TEXT NOT NULL UNIQUE,
+    name TEXT,
+    notes TEXT,
+    target_price REAL,
+    stop_loss REAL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 // Portfolio functions
 export const getPortfolio = () => {
   return db.prepare('SELECT * FROM portfolio ORDER BY created_at DESC').all();
@@ -102,6 +116,44 @@ export const updateWatchlistItem = (id, notes) => {
 export const removeFromWatchlist = (id) => {
   const item = getWatchlistItem(id);
   db.prepare('DELETE FROM watchlist WHERE id = ?').run(id);
+  return item;
+};
+
+// Focus List functions
+export const getFocusList = () => {
+  return db.prepare('SELECT * FROM focus_list ORDER BY created_at DESC').all();
+};
+
+export const getFocusListItem = (id) => {
+  return db.prepare('SELECT * FROM focus_list WHERE id = ?').get(id);
+};
+
+export const getFocusListItemBySymbol = (symbol) => {
+  return db.prepare('SELECT * FROM focus_list WHERE symbol = ?').get(symbol.toUpperCase());
+};
+
+export const addToFocusList = (symbol, name, notes = '', targetPrice = null, stopLoss = null) => {
+  const stmt = db.prepare(`
+    INSERT INTO focus_list (symbol, name, notes, target_price, stop_loss)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  const result = stmt.run(symbol.toUpperCase(), name, notes, targetPrice, stopLoss);
+  return getFocusListItem(result.lastInsertRowid);
+};
+
+export const updateFocusListItem = (id, notes, targetPrice, stopLoss) => {
+  const stmt = db.prepare(`
+    UPDATE focus_list 
+    SET notes = ?, target_price = ?, stop_loss = ?
+    WHERE id = ?
+  `);
+  stmt.run(notes, targetPrice, stopLoss, id);
+  return getFocusListItem(id);
+};
+
+export const removeFromFocusList = (id) => {
+  const item = getFocusListItem(id);
+  db.prepare('DELETE FROM focus_list WHERE id = ?').run(id);
   return item;
 };
 

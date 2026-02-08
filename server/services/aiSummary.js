@@ -203,3 +203,112 @@ export const generateSectorPrediction = async (sectorName, perf, leaders) => {
         };
     }
 };
+
+export const generateSimilarAssets = async (symbol, analysis, quote) => {
+    const genAI = getGenAI();
+    if (!genAI) return { similar: [], report: "AI Service Unavailable (No API Key)" };
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        const indicators = analysis.indicators || {};
+        const recommendation = analysis.recommendation || {};
+
+        const rsiVal = indicators.rsi !== null ? indicators.rsi.toFixed(2) : 'N/A';
+        const macdSignal = indicators.macd && indicators.macd.histogram > 0 ? 'Bullish' : 'Bearish';
+        const mainSignal = recommendation.recommendation || 'NEUTRAL';
+
+        const technicalContext = `
+        Symbol: ${symbol}
+        Current Price: ${quote.regularMarketPrice || quote.price}
+        Trend/Signal: ${mainSignal}
+        RSI: ${rsiVal}
+        MACD Momentum: ${macdSignal}
+        Key Signals: ${recommendation.signals ? recommendation.signals.map(s => s.signal).join(', ') : 'None'}
+        `;
+
+        const prompt = `
+        You are a Technical Analysis Expert & Market Stategist.
+        Target Asset: ${symbol} (${quote.shortName || quote.name})
+        
+        Technical Profile:
+        ${technicalContext}
+
+        Task: 
+        1. Identify 3 other stocks or ETFs that are technically similar or direct competitors with interesting setups.
+        2. Generate a "Comparative Analysis Report" comparing the Target Asset (${symbol}) with these 3 alternatives.
+
+        Output Format:
+        DO NOT return a standard JSON object. Instead, output EXATCLY two parts separated by the delimiter "--- REPORT ---".
+        
+        Part 1: A valid JSON Array [ ... ] containing the similar assets.
+        Part 2: The delimiter "--- REPORT ---"
+        Part 3: The detailed Markdown comparative report.
+
+        For the report, you MUST include a "Comparative Summary" table as the centerpiece.
+        Table Columns: Feature | ${symbol} | [Peer 1] | [Peer 2] | [Peer 3]
+        Table Rows: Industry, Technical Trend, Risk Level, Potential Upside, Diversification, Dividend, MACD Momentum.
+
+        Example Output:
+        [
+            {
+                "symbol": "AMD",
+                "name": "Advanced Micro Devices",
+                "reason": "Strong uptrend, similar semi-conductor technicals.",
+                "similarity": "High"
+            }
+        ]
+        --- REPORT ---
+        # Comparative Analysis
+        
+        ## Comparative Summary
+        | Feature | ${symbol} | AMD | NVDA | INTC |
+        |---|---|---|---|---|
+        | Industry | Semi | Semi | Semi | Semi |
+        | Trend | Bullish | Bullish | Bullish | Bearish |
+        ...
+        `;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        const delimiter = "--- REPORT ---";
+        const parts = text.split(delimiter);
+
+        let similar = [];
+        let report = "";
+
+        // Parse JSON List
+        const jsonPart = parts[0];
+        const jsonStart = jsonPart.indexOf('[');
+        const jsonEnd = jsonPart.lastIndexOf(']');
+
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            try {
+                const jsonStr = jsonPart.substring(jsonStart, jsonEnd + 1);
+                similar = JSON.parse(jsonStr);
+            } catch (e) {
+                console.error("JSON List Parse Error:", e);
+            }
+        }
+
+        // Extract Report
+        if (parts.length > 1) {
+            report = parts[1].trim();
+        } else {
+            // Fallback: If no delimiter, maybe the AI put everything in one blob or failed the format.
+            // Check if we got a list at least.
+            if (similar.length > 0) {
+                report = "## Report Unavailable\n\nAI generated the list but failed to format the report section.";
+            } else {
+                return { similar: [], report: "AI failed to generate valid response." };
+            }
+        }
+
+        return { similar, report };
+
+    } catch (e) {
+        console.error("AI Similar Assets Error:", e);
+        return { similar: [], report: `AI Error: ${e.message}` };
+    }
+};

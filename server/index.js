@@ -11,6 +11,8 @@ import searchRouter from './routes/search.js';
 import trendAlertsRouter from './routes/trendAlerts.js';
 import blackswanRouter from './routes/blackswan.js';
 import grayrhinoRouter from './routes/grayrhino.js';
+import focusListRouter from './routes/focusList.js';
+import marketRouter from './routes/market.js';
 import recommendationsHandler from '../api/_controllers/recommendations.js';
 
 const app = express();
@@ -24,6 +26,7 @@ app.use(express.json());
 app.use('/api/stocks', stocksRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/watchlist', watchlistRouter);
+app.use('/api/focus-list', focusListRouter);
 app.use('/api/sectors', sectorsRouter);
 app.use('/api/insights', insightsRouter);
 app.use('/api/trend-alerts', trendAlertsRouter);
@@ -31,7 +34,9 @@ app.use('/api/batch-quotes', batchQuotesRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/recommendations', recommendationsHandler);
 app.use('/api/blackswan', blackswanRouter);
+app.use('/api/blackswan', blackswanRouter);
 app.use('/api/grayrhino', grayrhinoRouter);
+app.use('/api/market', marketRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

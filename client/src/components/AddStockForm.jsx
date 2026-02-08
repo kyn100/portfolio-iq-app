@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { searchStocks } from '../services/api';
 
-const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onCancel }) => {
-  const [symbol, setSymbol] = useState('');
+const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onAddToFocusList, onCancel, initialMode = 'portfolio', initialSymbol = '', initialPrice = '' }) => {
+  const [symbol, setSymbol] = useState(initialSymbol);
   const [quantity, setQuantity] = useState('');
-  const [purchasePrice, setPurchasePrice] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState(initialPrice);
+  const [targetPrice, setTargetPrice] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
   const [notes, setNotes] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedStock, setSelectedStock] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searching, setSearching] = useState(false);
-  const [mode, setMode] = useState('portfolio'); // 'portfolio' or 'watchlist'
+  const [mode, setMode] = useState(initialMode); // 'portfolio', 'watchlist', 'focus-list'
 
   const handleSearch = async (query) => {
     setSymbol(query);
@@ -56,12 +58,21 @@ const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onCancel }) => {
           parseFloat(quantity) || 0,
           parseFloat(purchasePrice) || 0
         );
+      } else if (mode === 'focus-list') {
+        await onAddToFocusList(
+          symbol.toUpperCase(),
+          notes,
+          parseFloat(targetPrice) || null,
+          parseFloat(stopLoss) || null
+        );
       } else {
         await onAddToWatchlist(symbol.toUpperCase(), notes);
       }
       setSymbol('');
       setQuantity('');
       setPurchasePrice('');
+      setTargetPrice('');
+      setStopLoss('');
       setNotes('');
       setSelectedStock(null);
     } catch (err) {
@@ -80,24 +91,32 @@ const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onCancel }) => {
         <button
           type="button"
           onClick={() => setMode('portfolio')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            mode === 'portfolio'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${mode === 'portfolio'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+            }`}
         >
           Portfolio
         </button>
         <button
           type="button"
           onClick={() => setMode('watchlist')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            mode === 'watchlist'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${mode === 'watchlist'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+            }`}
         >
           Watchlist
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('focus-list')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${mode === 'focus-list'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+            }`}
+        >
+          Focus List
         </button>
       </div>
 
@@ -205,6 +224,52 @@ const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onCancel }) => {
           </div>
         )}
 
+        {/* Focus List-specific fields */}
+        {mode === 'focus-list' && (
+          <>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Target Entry ($)
+                </label>
+                <input
+                  type="number"
+                  value={targetPrice}
+                  onChange={(e) => setTargetPrice(e.target.value)}
+                  placeholder="0.00"
+                  step="any"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stop Loss ($)
+                </label>
+                <input
+                  type="number"
+                  value={stopLoss}
+                  onChange={(e) => setStopLoss(e.target.value)}
+                  placeholder="0.00"
+                  step="any"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trade Thesis / Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Why is this a good setup?"
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </>
+        )}
+
         {/* Error */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
@@ -219,7 +284,7 @@ const AddStockForm = ({ onAddToPortfolio, onAddToWatchlist, onCancel }) => {
             disabled={loading || !symbol}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Adding...' : mode === 'portfolio' ? 'Add to Portfolio' : 'Add to Watchlist'}
+            {loading ? 'Adding...' : mode === 'portfolio' ? 'Add to Portfolio' : mode === 'focus-list' ? 'Add to Focus List' : 'Add to Watchlist'}
           </button>
           <button
             type="button"

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getStockQuote, getHistoricalData, searchSymbol, getNews, getAlternatives } from '../services/yahooFinance.js';
+import { getStockQuote, getHistoricalData, searchSymbol, getNews, getAlternatives, getBasicQuote } from '../services/yahooFinance.js';
 import { analyzeStock } from '../services/technicalAnalysis.js';
 
 const router = Router();
@@ -52,6 +52,40 @@ router.get('/:symbol/history', async (req, res) => {
     res.json(historicalData);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Calculate similar assets
+import { generateSimilarAssets } from '../services/aiSummary.js';
+
+router.get('/:symbol/similar', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+
+    // Fetch just enough context for analysis
+    const quote = await getBasicQuote(symbol);
+    const history = await getHistoricalData(symbol, '6mo');
+    const analysis = analyzeStock(history, quote);
+
+    const { similar, report } = await generateSimilarAssets(symbol, analysis, quote);
+
+    res.json({
+      target: {
+        symbol: symbol.toUpperCase(),
+        name: quote.name,
+        signal: analysis.recommendation?.recommendation || 'NEUTRAL'
+      },
+      similar: similar || [],
+      report: report || null
+    });
+  } catch (e) {
+    console.error("Similar Assets Error:", e);
+    // Return empty but valid structure so frontend doesn't break
+    res.json({
+      target: { symbol: req.params.symbol, name: "", signal: "ERROR" },
+      similar: [],
+      report: `Failed to generate similar assets: ${e.message}`
+    });
   }
 });
 

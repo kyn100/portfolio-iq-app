@@ -203,7 +203,61 @@ export const updateWatchlistItem = async (id, notes) => {
 };
 
 
+// --- Focus List Functions ---
+
+export const fetchFocusList = async () => {
+  // 1. Fetch from our API (which handles DB + Realtime Data)
+  const response = await fetch(`${API_BASE}/focus-list`);
+  if (!response.ok) throw new Error('Failed to fetch focus list');
+  const data = await response.json();
+  return data; // { items: [...] }
+};
+
+export const addToFocusList = async (symbol, notes = '', target_price = null, stop_loss = null) => {
+  const response = await fetch(`${API_BASE}/focus-list`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbol, notes, target_price, stop_loss })
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to add to focus list');
+  }
+  return response.json();
+};
+
+export const updateFocusListItem = async (id, notes, target_price, stop_loss) => {
+  const response = await fetch(`${API_BASE}/focus-list/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes, target_price, stop_loss })
+  });
+  if (!response.ok) throw new Error('Failed to update focus list item');
+  return response.json();
+};
+
+export const removeFromFocusList = async (id) => {
+  const response = await fetch(`${API_BASE}/focus-list/${id}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok) throw new Error('Failed to remove from focus list');
+  return response.json();
+};
+
+
 // --- Other API ---
+
+export const fetchStockHistory = async (symbol, period = '6mo') => {
+  const response = await fetch(`${API_BASE}/stocks/${symbol}/history?period=${period}`);
+  if (!response.ok) throw new Error('Failed to fetch stock history');
+  return response.json();
+};
+
+export const fetchSimilarAssets = async (symbol) => {
+  const response = await fetch(`${API_BASE}/stocks/${symbol}/similar`);
+  if (!response.ok) throw new Error('Failed to fetch similar assets');
+  return response.json();
+};
 
 export const fetchSectors = async () => {
   const response = await fetch(`${API_BASE}/sectors`);
@@ -278,5 +332,12 @@ export const fetchBlackSwanEvents = async () => {
 export const fetchGrayRhinoEvents = async () => {
   const response = await fetch(`${API_BASE}/grayrhino`);
   if (!response.ok) throw new Error('Failed to fetch gray rhino events');
+  return response.json();
+};
+
+export const fetchMarketOutlook = async (force = false) => {
+  const url = `${API_BASE}/market/outlook${force ? '?force=true' : ''}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch market outlook');
   return response.json();
 };
