@@ -10,12 +10,13 @@ import batchQuotesHandler from './_controllers/batch-quotes.js';
 import searchHandler from './_controllers/search.js';
 import trendAlertsHandler from './_controllers/trend-alerts.js';
 import healthHandler from './_controllers/health.js';
-import stockDetailsHandler from './_controllers/stock-details.js';
+// stockDetailsHandler removed
 import recommendationsHandler from './_controllers/recommendations.js';
 import blackswanHandler from './_controllers/blackswan.js';
 import grayrhinoHandler from './_controllers/grayrhino.js';
 import marketRouter from '../server/routes/market.js';
 import focusListRouter from '../server/routes/focusList.js';
+import stocksRouter from '../server/routes/stocks.js';
 
 const app = express();
 
@@ -51,7 +52,7 @@ app.use('/api/market', marketRouter);
 app.use('/api/focus-list', focusListRouter);
 
 // Stock Details
-app.all('/api/stocks/:symbol', stockDetailsHandler);
+app.use('/api/stocks', stocksRouter);
 
 // Fallback for unhandled routes
 app.use((req, res) => {

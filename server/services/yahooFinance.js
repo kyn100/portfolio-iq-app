@@ -657,10 +657,36 @@ const detectTrendTurning = async (symbol, sectorName) => {
 // Get all sectors with trend turning points
 export const getTrendAlerts = async () => {
   try {
-    const sectors = Object.entries(SECTOR_BENCHMARKS);
+    const TREND_WATCHLIST = [
+      // Major Indices / Sectors (Existing)
+      ...Object.entries(SECTOR_BENCHMARKS).map(([name, symbol]) => ({ symbol, name })),
 
-    const alertPromises = sectors.map(async ([sectorName, etfSymbol]) => {
-      return await detectTrendTurning(etfSymbol, sectorName);
+      // Major Tech / Growth (Mag 7 + Friends)
+      { symbol: 'NVDA', name: 'Nvidia (AI Leader)' },
+      { symbol: 'AAPL', name: 'Apple' },
+      { symbol: 'MSFT', name: 'Microsoft' },
+      { symbol: 'AMZN', name: 'Amazon' },
+      { symbol: 'GOOGL', name: 'Google' },
+      { symbol: 'META', name: 'Meta' },
+      { symbol: 'TSLA', name: 'Tesla' },
+      { symbol: 'AMD', name: 'AMD' },
+      { symbol: 'NFLX', name: 'Netflix' },
+      { symbol: 'AVGO', name: 'Broadcom' },
+
+      // Popular ETFs / Themes
+      { symbol: 'SMH', name: 'Semiconductors' },
+      { symbol: 'IGV', name: 'Software' },
+      { symbol: 'XBI', name: 'Biotech' },
+      { symbol: 'ARKK', name: 'Innovation' },
+      { symbol: 'TLT', name: '20+ Yr Treasuries' },
+      { symbol: 'GLD', name: 'Gold' },
+      { symbol: 'SLV', name: 'Silver' },
+      { symbol: 'IBIT', name: 'Bitcoin ETF' }
+    ];
+
+    const alertPromises = TREND_WATCHLIST.map(async ({ symbol, name }) => {
+      // Use existing detector
+      return await detectTrendTurning(symbol, name);
     });
 
     const results = await Promise.all(alertPromises);
