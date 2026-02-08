@@ -205,43 +205,83 @@ export const updateWatchlistItem = async (id, notes) => {
 
 // --- Focus List Functions ---
 
+// --- Focus List Functions ---
+
 export const fetchFocusList = async () => {
-  // 1. Fetch from our API (which handles DB + Realtime Data)
-  const response = await fetch(`${API_BASE}/focus-list`);
-  if (!response.ok) throw new Error('Failed to fetch focus list');
-  const data = await response.json();
-  return data; // { items: [...] }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  // 1. Fetch raw list from Supabase
+  const { data: items, error } = await supabase
+    .from('focus_list')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!items || items.length === 0) return { items: [] };
+
+  // 2. Enrich with market data via backend
+  try {
+    const response = await fetch(`${API_BASE}/focus-list/enrich`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+
+    if (response.ok) {
+      const enrichedData = await response.json();
+      return enrichedData; // { items: [...] }
+    } else {
+      console.warn("Enrichment failed, returning raw items");
+      return { items };
+    }
+  } catch (err) {
+    console.error("Failed to enrich focus list:", err);
+    return { items };
+  }
 };
 
 export const addToFocusList = async (symbol, notes = '', target_price = null, stop_loss = null) => {
-  const response = await fetch(`${API_BASE}/focus-list`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol, notes, target_price, stop_loss })
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to add to focus list');
-  }
-  return response.json();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('focus_list')
+    .insert([{
+      user_id: session.user.id,
+      symbol: symbol.toUpperCase(),
+      notes,
+      target_price: target_price ? parseFloat(target_price) : null,
+      stop_loss: stop_loss ? parseFloat(stop_loss) : null
+    }])
+    .select();
+
+  if (error) throw error;
+  return data[0];
 };
 
 export const updateFocusListItem = async (id, notes, target_price, stop_loss) => {
-  const response = await fetch(`${API_BASE}/focus-list/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ notes, target_price, stop_loss })
-  });
-  if (!response.ok) throw new Error('Failed to update focus list item');
-  return response.json();
+  const { error } = await supabase
+    .from('focus_list')
+    .update({
+      notes,
+      target_price: target_price ? parseFloat(target_price) : null,
+      stop_loss: stop_loss ? parseFloat(stop_loss) : null
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
 export const removeFromFocusList = async (id) => {
-  const response = await fetch(`${API_BASE}/focus-list/${id}`, {
-    method: 'DELETE'
-  });
-  if (!response.ok) throw new Error('Failed to remove from focus list');
-  return response.json();
+  const { error } = await supabase
+    .from('focus_list')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return { success: true };
 };
 
 

@@ -1,25 +1,21 @@
 import { Router } from 'express';
-import {
-    getFocusList,
-    getFocusListItem,
-    getFocusListItemBySymbol,
-    addToFocusList,
-    updateFocusListItem,
-    removeFromFocusList,
-} from '../database/db.js';
 import { getStockQuote, getHistoricalData, getSectorComparison, getNews, getAlternatives } from '../services/yahooFinance.js';
 import { analyzeStock } from '../services/technicalAnalysis.js';
 
 const router = Router();
 
-// Get all focus list items with current data
-router.get('/', async (req, res) => {
+// Enrich a list of focus items with market data
+router.post('/enrich', async (req, res) => {
     try {
-        const focusList = getFocusList();
+        const { items } = req.body;
+
+        if (!items || !Array.isArray(items)) {
+            return res.status(400).json({ error: 'Items array is required' });
+        }
 
         // Fetch current data for each stock in parallel
-        const focusListWithData = await Promise.all(
-            focusList.map(async (item) => {
+        const enrichedItems = await Promise.all(
+            items.map(async (item) => {
                 try {
                     // Fetch data sequentially to respect rate limits
                     const quote = await getStockQuote(item.symbol);
@@ -75,72 +71,7 @@ router.get('/', async (req, res) => {
             })
         );
 
-        res.json({ items: focusListWithData });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Add stock to focus list
-router.post('/', async (req, res) => {
-    try {
-        const { symbol, notes = '', target_price = null, stop_loss = null } = req.body;
-
-        if (!symbol) {
-            return res.status(400).json({ error: 'Symbol is required' });
-        }
-
-        // Check if already exists
-        const existing = getFocusListItemBySymbol(symbol);
-        if (existing) {
-            return res.status(400).json({ error: 'Stock already in focus list' });
-        }
-
-        // Verify the symbol exists and get the name
-        const quote = await getStockQuote(symbol);
-
-        const item = addToFocusList(symbol, quote.name, notes, target_price, stop_loss);
-        res.status(201).json(item);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update focus list item (notes, target, stop)
-router.put('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { notes, target_price, stop_loss } = req.body;
-
-        const existing = getFocusListItem(parseInt(id));
-        if (!existing) {
-            return res.status(404).json({ error: 'Focus list item not found' });
-        }
-
-        const item = updateFocusListItem(
-            parseInt(id),
-            notes ?? existing.notes,
-            target_price ?? existing.target_price,
-            stop_loss ?? existing.stop_loss
-        );
-        res.json(item);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Remove from focus list
-router.delete('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const existing = getFocusListItem(parseInt(id));
-        if (!existing) {
-            return res.status(404).json({ error: 'Focus list item not found' });
-        }
-
-        const item = removeFromFocusList(parseInt(id));
-        res.json({ message: 'Removed from focus list', item });
+        res.json({ items: enrichedItems });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
