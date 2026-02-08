@@ -15,6 +15,14 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
   // Sell State
   const [showSell, setShowSell] = useState(false);
   const [sellQty, setSellQty] = useState(1);
+  const [sellPrice, setSellPrice] = useState(stock.currentPrice || 0);
+
+  // Update sell price when current price changes or when opening sell form
+  React.useEffect(() => {
+    if (showSell && stock.currentPrice) {
+      setSellPrice(stk => stk === 0 ? stock.currentPrice : stk);
+    }
+  }, [showSell, stock.currentPrice]);
 
   const handleSellSubmit = () => {
     if (sellQty <= 0) return;
@@ -25,12 +33,22 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
       return;
     }
 
+    const totalSale = sellQty * sellPrice;
+    const costBasis = sellQty * stock.purchase_price;
+    const profitLoss = totalSale - costBasis;
+    const isProfit = profitLoss >= 0;
+
+    const confirmMessage = `Sell ${sellQty} shares of ${stock.symbol} at $${sellPrice.toFixed(2)}?
+
+Total Sale: $${totalSale.toFixed(2)}
+Estimated P/L: ${isProfit ? '+' : ''}$${profitLoss.toFixed(2)} (${((profitLoss / costBasis) * 100).toFixed(2)}%)`;
+
     if (sellQty === stock.quantity) {
-      if (window.confirm(`Sell all ${stock.quantity} shares of ${stock.symbol}?`)) {
+      if (window.confirm(`${confirmMessage}\n\nThis will remove the stock from your portfolio.`)) {
         onRemove(stock.id);
       }
     } else {
-      if (window.confirm(`Sell ${sellQty} shares of ${stock.symbol}?`)) {
+      if (window.confirm(confirmMessage)) {
         onUpdate(stock.id, stock.quantity - sellQty, stock.purchase_price);
         setShowSell(false);
         setSellQty(1); // Reset
@@ -190,29 +208,46 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
             {/* Sell Form (Inline) */}
             {showSell && (
               <div className="mt-3 pt-3 border-t border-gray-200 animate-fade-in">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Quantity to Sell (Max: {stock.quantity})</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    max={stock.quantity}
-                    value={sellQty}
-                    onChange={(e) => setSellQty(Math.min(parseInt(e.target.value) || 0, stock.quantity))}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 outline-none"
-                  />
-                  <button
-                    onClick={handleSellSubmit}
-                    disabled={sellQty <= 0}
-                    className="flex-1 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    Confirm Sell
-                  </button>
-                  <button
-                    onClick={() => setShowSell(false)}
-                    className="px-2 bg-gray-200 text-gray-600 text-xs font-bold rounded hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2 items-end">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Qty (Max: {stock.quantity})</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max={stock.quantity}
+                        value={sellQty}
+                        onChange={(e) => setSellQty(Math.min(parseInt(e.target.value) || 0, stock.quantity))}
+                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Price ($)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={sellPrice}
+                        onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+                        className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      onClick={handleSellSubmit}
+                      disabled={sellQty <= 0}
+                      className="flex-1 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700 transition-colors disabled:opacity-50 py-1.5"
+                    >
+                      Confirm Sell
+                    </button>
+                    <button
+                      onClick={() => setShowSell(false)}
+                      className="px-3 bg-gray-200 text-gray-600 text-xs font-bold rounded hover:bg-gray-300 py-1.5"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -272,14 +307,14 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {analysis.recommendation.reasons.slice(0, 3).map((reason, idx) => (
                     <li key={idx} className="flex items-start gap-1">
                       <span className={`mt - 1 w - 1.5 h - 1.5 rounded - full flex - shrink - 0 ${reason.startsWith('Caution') || reason.startsWith('Bearish') || reason.startsWith('Also negative')
-                          ? 'bg-red-400'
-                          : reason.startsWith('Note') || reason.startsWith('Bullish') || reason.startsWith('Also positive')
+                        ? 'bg-red-400'
+                        : reason.startsWith('Note') || reason.startsWith('Bullish') || reason.startsWith('Also positive')
+                          ? 'bg-green-400'
+                          : analysis.recommendation.recommendation === 'BUY'
                             ? 'bg-green-400'
-                            : analysis.recommendation.recommendation === 'BUY'
-                              ? 'bg-green-400'
-                              : analysis.recommendation.recommendation === 'SELL'
-                                ? 'bg-red-400'
-                                : 'bg-yellow-400'
+                            : analysis.recommendation.recommendation === 'SELL'
+                              ? 'bg-red-400'
+                              : 'bg-yellow-400'
                         } `} />
                       <span>{reason}</span>
                     </li>
@@ -462,7 +497,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
         >
           {expanded ? 'Hide' : 'Show'} Details
           <svg
-            className={`w - 4 h - 4 transition - transform ${expanded ? 'rotate-180' : ''} `}
+            className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -473,461 +508,463 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
       </div>
 
       {/* Expanded Details */}
-      {expanded && (
-        <div className="border-t border-gray-100 p-4 bg-gray-50">
-          <TechnicalChart stock={stock} period="6mo" />
+      {
+        expanded && (
+          <div className="border-t border-gray-100 p-4 bg-gray-50">
+            <TechnicalChart stock={stock} period="6mo" />
 
-          <div className="mt-4 flex flex-col gap-2">
-            {!showSimilar && (
-              <button
-                onClick={handleFindSimilar}
-                disabled={loadingSimilar}
-                className="w-full py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium flex justify-center items-center gap-2"
-              >
-                {loadingSimilar ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    Analyzing Market Patterns...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    Find Similar Setups (AI)
-                  </>
-                )}
-              </button>
-            )}
+            <div className="mt-4 flex flex-col gap-2">
+              {!showSimilar && (
+                <button
+                  onClick={handleFindSimilar}
+                  disabled={loadingSimilar}
+                  className="w-full py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium flex justify-center items-center gap-2"
+                >
+                  {loadingSimilar ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                      Analyzing Market Patterns...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                      Find Similar Setups (AI)
+                    </>
+                  )}
+                </button>
+              )}
 
-            {showSimilar && similarAssets && (
-              <div className="bg-white rounded-lg border border-indigo-100 p-4 animate-fade-in">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="font-bold text-indigo-900 flex items-center gap-2">
-                    <span className="bg-indigo-100 p-1 rounded">
-                      <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </span>
-                    Technically Similar Assets
-                  </h4>
-                  <button onClick={() => setShowSimilar(false)} className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
+              {showSimilar && similarAssets && (
+                <div className="bg-white rounded-lg border border-indigo-100 p-4 animate-fade-in">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-indigo-900 flex items-center gap-2">
+                      <span className="bg-indigo-100 p-1 rounded">
+                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      </span>
+                      Technically Similar Assets
+                    </h4>
+                    <button onClick={() => setShowSimilar(false)} className="text-gray-400 hover:text-gray-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
 
-                {/* List of Similar Assets */}
-                {similarAssets && similarAssets.length > 0 && (
-                  <div className="space-y-3 mb-6">
-                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Identify Similar Setups</h5>
-                    {similarAssets.map((asset) => (
-                      <div key={asset.symbol} className="flex justify-between items-start border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-800">{asset.symbol}</span>
-                            <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} `}>
-                              {asset.similarity} Match
-                            </span>
+                  {/* List of Similar Assets */}
+                  {similarAssets && similarAssets.length > 0 && (
+                    <div className="space-y-3 mb-6">
+                      <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Identify Similar Setups</h5>
+                      {similarAssets.map((asset) => (
+                        <div key={asset.symbol} className="flex justify-between items-start border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-gray-800">{asset.symbol}</span>
+                              <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} `}>
+                                {asset.similarity} Match
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">{asset.name}</p>
+                            <p className="text-xs text-indigo-600 mt-1 italic">"{asset.reason}"</p>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{asset.name}</p>
-                          <p className="text-xs text-indigo-600 mt-1 italic">"{asset.reason}"</p>
                         </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Report Section */}
+                  {similarReport && (() => {
+                    // We need to parse the markdown into 3 parts:
+                    // 1. Intro (Header & Logic) -> STATIC
+                    // 2. Comparative Summary (Table) -> SCROLLABLE
+                    // 3. Detailed Analysis (Rest) -> STATIC
+
+                    // 1. Find start of Comparative Summary
+                    const summaryHeaderPattern = /## Comparative Summary/i;
+                    const summaryMatch = similarReport.match(summaryHeaderPattern);
+
+                    let introPart = "";
+                    let rest = "";
+
+                    if (summaryMatch) {
+                      introPart = similarReport.substring(0, summaryMatch.index);
+                      rest = similarReport.substring(summaryMatch.index);
+                    } else {
+                      // Fallback: If header missing, assume it starts with summary/table or is just one blob
+                      introPart = "";
+                      rest = similarReport;
+                    }
+
+                    // 2. Split 'rest' into SummaryTable and DetailedAnalysis
+                    // Look for the next major header (e.g. ## Detailed Analysis)
+                    const nextSectionRegex = /(?=## (?:Detailed Analysis|Individual|Financial|Key Takeaways|Risk Assessment|Conclusion))/i;
+                    const parts = rest.split(nextSectionRegex);
+
+                    const summaryPart = parts[0]; // This contains "## Comparative Summary" + Table
+                    const detailedPart = parts.length > 1 ? parts.slice(1).join('') : '';
+
+                    return (
+                      <div className="mt-4 pt-4 border-t border-indigo-100">
+                        <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
+
+                        {/* 1. Intro Section (Static) */}
+                        {introPart.trim() && (
+                          <div className="prose prose-sm prose-indigo max-w-none text-gray-700 mb-4">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{introPart}</ReactMarkdown>
+                          </div>
+                        )}
+
+                        {/* Summary Section (Scrollable Table Area) */}
+                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-80 overflow-y-auto custom-scrollbar mb-4">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
+                              thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                              th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap sticky top-0 bg-gray-100 z-10" {...props} />,
+                              td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
+                            }}
+                          >
+                            {summaryPart}
+                          </ReactMarkdown>
+                        </div>
+
+                        {/* Detailed Analysis (Static) */}
+                        {detailedPart && (
+                          <div className="prose prose-sm prose-indigo max-w-none text-gray-700">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailedPart}</ReactMarkdown>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })()}
 
-                {/* Report Section */}
-                {similarReport && (() => {
-                  // We need to parse the markdown into 3 parts:
-                  // 1. Intro (Header & Logic) -> STATIC
-                  // 2. Comparative Summary (Table) -> SCROLLABLE
-                  // 3. Detailed Analysis (Rest) -> STATIC
-
-                  // 1. Find start of Comparative Summary
-                  const summaryHeaderPattern = /## Comparative Summary/i;
-                  const summaryMatch = similarReport.match(summaryHeaderPattern);
-
-                  let introPart = "";
-                  let rest = "";
-
-                  if (summaryMatch) {
-                    introPart = similarReport.substring(0, summaryMatch.index);
-                    rest = similarReport.substring(summaryMatch.index);
-                  } else {
-                    // Fallback: If header missing, assume it starts with summary/table or is just one blob
-                    introPart = "";
-                    rest = similarReport;
-                  }
-
-                  // 2. Split 'rest' into SummaryTable and DetailedAnalysis
-                  // Look for the next major header (e.g. ## Detailed Analysis)
-                  const nextSectionRegex = /(?=## (?:Detailed Analysis|Individual|Financial|Key Takeaways|Risk Assessment|Conclusion))/i;
-                  const parts = rest.split(nextSectionRegex);
-
-                  const summaryPart = parts[0]; // This contains "## Comparative Summary" + Table
-                  const detailedPart = parts.length > 1 ? parts.slice(1).join('') : '';
-
-                  return (
-                    <div className="mt-4 pt-4 border-t border-indigo-100">
-                      <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
-
-                      {/* 1. Intro Section (Static) */}
-                      {introPart.trim() && (
-                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700 mb-4">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{introPart}</ReactMarkdown>
-                        </div>
-                      )}
-
-                      {/* Summary Section (Scrollable Table Area) */}
-                      <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-80 overflow-y-auto custom-scrollbar mb-4">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
-                            thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
-                            th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap sticky top-0 bg-gray-100 z-10" {...props} />,
-                            td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
-                          }}
-                        >
-                          {summaryPart}
-                        </ReactMarkdown>
-                      </div>
-
-                      {/* Detailed Analysis (Static) */}
-                      {detailedPart && (
-                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailedPart}</ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* Empty State (Only if both are missing) */}
-                {(!similarAssets || similarAssets.length === 0) && !similarReport && (
-                  <p className="text-sm text-gray-500 italic">No similar setups found at this time.</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Fundamental Metrics */}
-          <div className="mb-4">
-            <div className="text-xs text-gray-500 mb-2 font-medium">Fundamentals</div>
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">P/E Ratio</div>
-                <div className="font-bold">{stock.peRatio?.toFixed(1) || 'N/A'}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">Forward P/E</div>
-                <div className="font-bold">{stock.forwardPE?.toFixed(1) || 'N/A'}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">YTD Return</div>
-                <div className={`font - bold ${ytdColor} `}>
-                  {stock.ytdReturn !== null ? `${stock.ytdReturn >= 0 ? '+' : ''}${stock.ytdReturn.toFixed(1)}% ` : 'N/A'}
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">Dividend Yield</div>
-                <div className="font-bold">{stock.dividendYield ? `${stock.dividendYield.toFixed(2)}% ` : 'N/A'}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">52W High</div>
-                <div className="font-bold">${stock.fiftyTwoWeekHigh?.toFixed(2) || 'N/A'}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border">
-                <div className="text-gray-500 text-xs">52W Low</div>
-                <div className="font-bold">${stock.fiftyTwoWeekLow?.toFixed(2) || 'N/A'}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sector Comparison Details */}
-          {sectorComparison && (
-            <div className="mb-4">
-              <div className="text-xs text-gray-500 mb-2 font-medium">Sector Performance Comparison</div>
-              <div className="bg-white rounded-lg p-3 border">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <div className="text-xs text-gray-400">Stock YTD</div>
-                    <div className={`font - medium ${sectorComparison.stockYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
-                      {sectorComparison.stockYTD?.toFixed(1)}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Sector YTD ({sectorComparison.sectorETF})</div>
-                    <div className={`font - medium ${sectorComparison.sectorYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
-                      {sectorComparison.sectorYTD?.toFixed(1)}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Stock 1M</div>
-                    <div className={`font - medium ${sectorComparison.stock1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
-                      {sectorComparison.stock1Month?.toFixed(1)}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400">Sector 1M</div>
-                    <div className={`font - medium ${sectorComparison.sector1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
-                      {sectorComparison.sector1Month?.toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Technical Indicators */}
-          {analysis && (
-            <>
-              <div className="text-xs text-gray-500 mb-2 font-medium">Technical Indicators</div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {/* RSI */}
-                <div className="bg-white rounded-lg p-2 border">
-                  <div className="text-gray-500 text-xs">RSI (14)</div>
-                  <div className="font-bold text-lg">
-                    {analysis.indicators?.rsi?.toFixed(1) || 'N/A'}
-                  </div>
-                  <div className={`text - xs ${analysis.indicators?.rsi < 30 ? 'text-green-600' :
-                      analysis.indicators?.rsi > 70 ? 'text-red-600' : 'text-gray-500'
-                    } `}>
-                    {analysis.indicators?.rsi < 30 ? 'Oversold' :
-                      analysis.indicators?.rsi > 70 ? 'Overbought' : 'Neutral'}
-                  </div>
-                </div>
-
-                {/* MACD */}
-                <div className="bg-white rounded-lg p-2 border">
-                  <div className="text-gray-500 text-xs">MACD</div>
-                  <div className="font-bold text-lg">
-                    {analysis.indicators?.macd?.histogram?.toFixed(3) || 'N/A'}
-                  </div>
-                  <div className={`text - xs ${analysis.indicators?.macd?.histogram > 0 ? 'text-green-600' : 'text-red-600'
-                    } `}>
-                    {analysis.indicators?.macd?.histogram > 0 ? 'Bullish' : 'Bearish'}
-                  </div>
-                </div>
-
-                {/* Moving Averages */}
-                <div className="bg-white rounded-lg p-2 border">
-                  <div className="text-gray-500 text-xs">SMA 20 / 50</div>
-                  <div className="font-medium">
-                    ${analysis.indicators?.movingAverages?.sma20?.toFixed(2) || 'N/A'}
-                  </div>
-                  <div className="text-gray-600">
-                    ${analysis.indicators?.movingAverages?.sma50?.toFixed(2) || 'N/A'}
-                  </div>
-                </div>
-
-                {/* Bollinger Bands */}
-                <div className="bg-white rounded-lg p-2 border">
-                  <div className="text-gray-500 text-xs">Bollinger Bands</div>
-                  <div className="text-xs">
-                    <span className="text-red-500">U: ${analysis.indicators?.bollingerBands?.upper?.toFixed(2)}</span>
-                    {' / '}
-                    <span className="text-green-500">L: ${analysis.indicators?.bollingerBands?.lower?.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Money Flow */}
-              {analysis.indicators?.moneyFlow && (
-                <div className="mt-3 bg-white rounded-lg p-3 border">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="text-gray-500 text-xs font-medium">Money Flow (Buying vs Selling Pressure)</div>
-                    <div className="text-xs font-bold">Ratio: {analysis.indicators.moneyFlow.ratio}x</div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-16 text-right text-green-600 font-medium">{analysis.indicators.moneyFlow.inPercent}% In</div>
-                    <div className="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden flex">
-                      <div
-                        className="h-full bg-green-500"
-                        style={{ width: `${analysis.indicators.moneyFlow.inPercent}% ` }}
-                      />
-                      <div
-                        className="h-full bg-red-500"
-                        style={{ width: `${analysis.indicators.moneyFlow.outPercent}% ` }}
-                      />
-                    </div>
-                    <div className="w-16 text-red-600 font-medium">{analysis.indicators.moneyFlow.outPercent}% Out</div>
-                  </div>
-                  <div className="flex justify-between text-[10px] text-gray-400">
-                    <span>Accumulation</span>
-                    <span>Distribution</span>
-                  </div>
+                  {/* Empty State (Only if both are missing) */}
+                  {(!similarAssets || similarAssets.length === 0) && !similarReport && (
+                    <p className="text-sm text-gray-500 italic">No similar setups found at this time.</p>
+                  )}
                 </div>
               )}
-              {analysis.recommendation?.signals && (
-                <div className="mt-3">
-                  <div className="text-xs text-gray-500 mb-1">Signals</div>
-                  <div className="flex flex-wrap gap-1">
-                    {analysis.recommendation.signals.map((signal, i) => (
-                      <span
-                        key={i}
-                        className={`text - xs px - 2 py - 1 rounded - full ${signal.sentiment === 'bullish' ? 'bg-green-100 text-green-700' :
+            </div>
+
+            {/* Fundamental Metrics */}
+            <div className="mb-4">
+              <div className="text-xs text-gray-500 mb-2 font-medium">Fundamentals</div>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">P/E Ratio</div>
+                  <div className="font-bold">{stock.peRatio?.toFixed(1) || 'N/A'}</div>
+                </div>
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">Forward P/E</div>
+                  <div className="font-bold">{stock.forwardPE?.toFixed(1) || 'N/A'}</div>
+                </div>
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">YTD Return</div>
+                  <div className={`font - bold ${ytdColor} `}>
+                    {stock.ytdReturn !== null ? `${stock.ytdReturn >= 0 ? '+' : ''}${stock.ytdReturn.toFixed(1)}% ` : 'N/A'}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">Dividend Yield</div>
+                  <div className="font-bold">{stock.dividendYield ? `${stock.dividendYield.toFixed(2)}% ` : 'N/A'}</div>
+                </div>
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">52W High</div>
+                  <div className="font-bold">${stock.fiftyTwoWeekHigh?.toFixed(2) || 'N/A'}</div>
+                </div>
+                <div className="bg-white rounded-lg p-2 border">
+                  <div className="text-gray-500 text-xs">52W Low</div>
+                  <div className="font-bold">${stock.fiftyTwoWeekLow?.toFixed(2) || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sector Comparison Details */}
+            {sectorComparison && (
+              <div className="mb-4">
+                <div className="text-xs text-gray-500 mb-2 font-medium">Sector Performance Comparison</div>
+                <div className="bg-white rounded-lg p-3 border">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="text-xs text-gray-400">Stock YTD</div>
+                      <div className={`font - medium ${sectorComparison.stockYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
+                        {sectorComparison.stockYTD?.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Sector YTD ({sectorComparison.sectorETF})</div>
+                      <div className={`font - medium ${sectorComparison.sectorYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
+                        {sectorComparison.sectorYTD?.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Stock 1M</div>
+                      <div className={`font - medium ${sectorComparison.stock1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
+                        {sectorComparison.stock1Month?.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Sector 1M</div>
+                      <div className={`font - medium ${sectorComparison.sector1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
+                        {sectorComparison.sector1Month?.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Technical Indicators */}
+            {analysis && (
+              <>
+                <div className="text-xs text-gray-500 mb-2 font-medium">Technical Indicators</div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {/* RSI */}
+                  <div className="bg-white rounded-lg p-2 border">
+                    <div className="text-gray-500 text-xs">RSI (14)</div>
+                    <div className="font-bold text-lg">
+                      {analysis.indicators?.rsi?.toFixed(1) || 'N/A'}
+                    </div>
+                    <div className={`text - xs ${analysis.indicators?.rsi < 30 ? 'text-green-600' :
+                      analysis.indicators?.rsi > 70 ? 'text-red-600' : 'text-gray-500'
+                      } `}>
+                      {analysis.indicators?.rsi < 30 ? 'Oversold' :
+                        analysis.indicators?.rsi > 70 ? 'Overbought' : 'Neutral'}
+                    </div>
+                  </div>
+
+                  {/* MACD */}
+                  <div className="bg-white rounded-lg p-2 border">
+                    <div className="text-gray-500 text-xs">MACD</div>
+                    <div className="font-bold text-lg">
+                      {analysis.indicators?.macd?.histogram?.toFixed(3) || 'N/A'}
+                    </div>
+                    <div className={`text - xs ${analysis.indicators?.macd?.histogram > 0 ? 'text-green-600' : 'text-red-600'
+                      } `}>
+                      {analysis.indicators?.macd?.histogram > 0 ? 'Bullish' : 'Bearish'}
+                    </div>
+                  </div>
+
+                  {/* Moving Averages */}
+                  <div className="bg-white rounded-lg p-2 border">
+                    <div className="text-gray-500 text-xs">SMA 20 / 50</div>
+                    <div className="font-medium">
+                      ${analysis.indicators?.movingAverages?.sma20?.toFixed(2) || 'N/A'}
+                    </div>
+                    <div className="text-gray-600">
+                      ${analysis.indicators?.movingAverages?.sma50?.toFixed(2) || 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Bollinger Bands */}
+                  <div className="bg-white rounded-lg p-2 border">
+                    <div className="text-gray-500 text-xs">Bollinger Bands</div>
+                    <div className="text-xs">
+                      <span className="text-red-500">U: ${analysis.indicators?.bollingerBands?.upper?.toFixed(2)}</span>
+                      {' / '}
+                      <span className="text-green-500">L: ${analysis.indicators?.bollingerBands?.lower?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Money Flow */}
+                {analysis.indicators?.moneyFlow && (
+                  <div className="mt-3 bg-white rounded-lg p-3 border">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-gray-500 text-xs font-medium">Money Flow (Buying vs Selling Pressure)</div>
+                      <div className="text-xs font-bold">Ratio: {analysis.indicators.moneyFlow.ratio}x</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs mb-1">
+                      <div className="w-16 text-right text-green-600 font-medium">{analysis.indicators.moneyFlow.inPercent}% In</div>
+                      <div className="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden flex">
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${analysis.indicators.moneyFlow.inPercent}% ` }}
+                        />
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${analysis.indicators.moneyFlow.outPercent}% ` }}
+                        />
+                      </div>
+                      <div className="w-16 text-red-600 font-medium">{analysis.indicators.moneyFlow.outPercent}% Out</div>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-gray-400">
+                      <span>Accumulation</span>
+                      <span>Distribution</span>
+                    </div>
+                  </div>
+                )}
+                {analysis.recommendation?.signals && (
+                  <div className="mt-3">
+                    <div className="text-xs text-gray-500 mb-1">Signals</div>
+                    <div className="flex flex-wrap gap-1">
+                      {analysis.recommendation.signals.map((signal, i) => (
+                        <span
+                          key={i}
+                          className={`text - xs px - 2 py - 1 rounded - full ${signal.sentiment === 'bullish' ? 'bg-green-100 text-green-700' :
                             signal.sentiment === 'bearish' ? 'bg-red-100 text-red-700' :
                               signal.sentiment?.includes('bullish') ? 'bg-green-50 text-green-600' :
                                 signal.sentiment?.includes('bearish') ? 'bg-red-50 text-red-600' :
                                   'bg-gray-100 text-gray-600'
-                          } `}
-                      >
-                        {signal.indicator}: {signal.signal}
-                      </span>
-                    ))}
+                            } `}
+                        >
+                          {signal.indicator}: {signal.signal}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Controversial Opinions / Risks */}
-              {analysis.recommendation?.reasons && (
-                <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="text-sm font-bold text-orange-900 mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Controversial Opinions & Risks
-                  </div>
+                {/* Controversial Opinions / Risks */}
+                {analysis.recommendation?.reasons && (
+                  <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="text-sm font-bold text-orange-900 mb-2 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      Controversial Opinions & Risks
+                    </div>
 
-                  <div className="space-y-3">
-                    {/* Contrarian Technicals */}
-                    {/* Contrarian Technicals */}
-                    {(
-                      (analysis.recommendation.recommendation.includes('BUY') && analysis.recommendation.bearishReasons && analysis.recommendation.bearishReasons.length > 0) ||
-                      (analysis.recommendation.recommendation.includes('SELL') && analysis.recommendation.bullishReasons && analysis.recommendation.bullishReasons.length > 0) ||
-                      (analysis.recommendation.recommendation === 'HOLD')
-                    ) ? (
-                      <div>
-                        <p className="text-xs font-semibold text-orange-900/70 uppercase tracking-wider mb-1">
-                          {analysis.recommendation.recommendation === 'HOLD' ? 'Mixed Signals' : 'Counter-points'}
-                        </p>
-                        <ul className="text-sm space-y-1">
-                          {analysis.recommendation.recommendation.includes('BUY') ? (
-                            (analysis.recommendation.bearishReasons || []).slice(0, 3).map((r, i) => (
-                              <li key={i} className="flex items-start gap-2 text-gray-700">
-                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
-                                {r}
-                              </li>
-                            ))
-                          ) : analysis.recommendation.recommendation.includes('SELL') ? (
-                            (analysis.recommendation.bullishReasons || []).slice(0, 3).map((r, i) => (
-                              <li key={i} className="flex items-start gap-2 text-gray-700">
-                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
-                                {r}
-                              </li>
-                            ))
-                          ) : (
-                            // HOLD
-                            [
-                              ...(analysis.recommendation.bullishReasons || []).map(r => `Bullish: ${r} `),
-                              ...(analysis.recommendation.bearishReasons || []).map(r => `Bearish: ${r} `)
-                            ].slice(0, 4).map((r, i) => (
-                              <li key={i} className="flex items-start gap-2 text-gray-700">
-                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
-                                {r}
-                              </li>
-                            ))
-                          )}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-500 italic">No significant technical contradictions detected.</p>
-                    )}
-
-                    {/* Analyst Dissent */}
-                    {stock.analystRatings && (
-                      <div className="pt-2 border-t border-orange-100">
-                        <p className="text-xs text-orange-800 mb-1 font-medium">Wall St Dissent:</p>
-                        {analysis.recommendation.recommendation.includes('BUY') && (stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0) > 0 ? (
-                          <p className="text-xs text-gray-600">
-                            {(stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0)} analysts recommend SELLING, divergent from the technical trend.
-                          </p>
-                        ) : analysis.recommendation.recommendation.includes('SELL') && (stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0) > 0 ? (
-                          <p className="text-xs text-gray-600">
-                            {(stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0)} analysts recommend BUYING, suggesting value despite negative momentum.
-                          </p>
-                        ) : (
-                          <p className="text-xs text-gray-400 italic">Analysts generally align with the technical trend.</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Latest News */}
-              {stock.news && stock.news.length > 0 && (
-                <div className="mt-4">
-                  <div className="text-xs text-gray-500 mb-2 font-medium">Latest News</div>
-                  <div className="space-y-2">
-                    {stock.news.map((item, idx) => (
-                      <a
-                        key={idx}
-                        href={item.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm hover:border-blue-300 transition-all group"
-                      >
-                        <div className="flex gap-3">
-                          {/* Thumbnail if available */}
-                          {item.thumbnail?.resolutions?.[0]?.url && (
-                            <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
-                              <img src={item.thumbnail.resolutions[0].url} alt="" className="w-full h-full object-cover" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug mb-1">
-                              {item.title}
-                            </h4>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              <span className="font-medium text-gray-600">{item.publisher}</span>
-                              <span>•</span>
-                              <span>{new Date(item.providerPublishTime).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Alternative Buying Options */}
-              {stock.alternatives && stock.alternatives.length > 0 && (
-                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-xs font-bold text-green-800 mb-2 flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Alternative Buying Options
-                  </div>
-                  <div className="space-y-2">
-                    {stock.alternatives.map((alt, idx) => (
-                      <div key={idx} className="bg-white p-2 rounded border border-green-100 flex justify-between items-center text-sm">
+                    <div className="space-y-3">
+                      {/* Contrarian Technicals */}
+                      {/* Contrarian Technicals */}
+                      {(
+                        (analysis.recommendation.recommendation.includes('BUY') && analysis.recommendation.bearishReasons && analysis.recommendation.bearishReasons.length > 0) ||
+                        (analysis.recommendation.recommendation.includes('SELL') && analysis.recommendation.bullishReasons && analysis.recommendation.bullishReasons.length > 0) ||
+                        (analysis.recommendation.recommendation === 'HOLD')
+                      ) ? (
                         <div>
-                          <div className="font-bold text-gray-900">{alt.symbol}</div>
-                          <div className="text-xs text-gray-500 truncate max-w-[150px]">{alt.name}</div>
+                          <p className="text-xs font-semibold text-orange-900/70 uppercase tracking-wider mb-1">
+                            {analysis.recommendation.recommendation === 'HOLD' ? 'Mixed Signals' : 'Counter-points'}
+                          </p>
+                          <ul className="text-sm space-y-1">
+                            {analysis.recommendation.recommendation.includes('BUY') ? (
+                              (analysis.recommendation.bearishReasons || []).slice(0, 3).map((r, i) => (
+                                <li key={i} className="flex items-start gap-2 text-gray-700">
+                                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                  {r}
+                                </li>
+                              ))
+                            ) : analysis.recommendation.recommendation.includes('SELL') ? (
+                              (analysis.recommendation.bullishReasons || []).slice(0, 3).map((r, i) => (
+                                <li key={i} className="flex items-start gap-2 text-gray-700">
+                                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                  {r}
+                                </li>
+                              ))
+                            ) : (
+                              // HOLD
+                              [
+                                ...(analysis.recommendation.bullishReasons || []).map(r => `Bullish: ${r} `),
+                                ...(analysis.recommendation.bearishReasons || []).map(r => `Bearish: ${r} `)
+                              ].slice(0, 4).map((r, i) => (
+                                <li key={i} className="flex items-start gap-2 text-gray-700">
+                                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
+                                  {r}
+                                </li>
+                              ))
+                            )}
+                          </ul>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium">${alt.price?.toFixed(2)}</div>
-                          <div className={`text - xs ${alt.changePercent >= 0 ? 'text-green-600' : 'text-red-600'} `}>
-                            {alt.changePercent >= 0 ? '+' : ''}{alt.changePercent?.toFixed(2)}%
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">No significant technical contradictions detected.</p>
+                      )}
+
+                      {/* Analyst Dissent */}
+                      {stock.analystRatings && (
+                        <div className="pt-2 border-t border-orange-100">
+                          <p className="text-xs text-orange-800 mb-1 font-medium">Wall St Dissent:</p>
+                          {analysis.recommendation.recommendation.includes('BUY') && (stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0) > 0 ? (
+                            <p className="text-xs text-gray-600">
+                              {(stock.analystRatings.sell || 0) + (stock.analystRatings.strongSell || 0)} analysts recommend SELLING, divergent from the technical trend.
+                            </p>
+                          ) : analysis.recommendation.recommendation.includes('SELL') && (stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0) > 0 ? (
+                            <p className="text-xs text-gray-600">
+                              {(stock.analystRatings.buy || 0) + (stock.analystRatings.strongBuy || 0)} analysts recommend BUYING, suggesting value despite negative momentum.
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400 italic">Analysts generally align with the technical trend.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Latest News */}
+                {stock.news && stock.news.length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-xs text-gray-500 mb-2 font-medium">Latest News</div>
+                    <div className="space-y-2">
+                      {stock.news.map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm hover:border-blue-300 transition-all group"
+                        >
+                          <div className="flex gap-3">
+                            {/* Thumbnail if available */}
+                            {item.thumbnail?.resolutions?.[0]?.url && (
+                              <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+                                <img src={item.thumbnail.resolutions[0].url} alt="" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2 leading-snug mb-1">
+                                {item.title}
+                              </h4>
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span className="font-medium text-gray-600">{item.publisher}</span>
+                                <span>•</span>
+                                <span>{new Date(item.providerPublishTime).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Alternative Buying Options */}
+                {stock.alternatives && stock.alternatives.length > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-xs font-bold text-green-800 mb-2 flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Alternative Buying Options
+                    </div>
+                    <div className="space-y-2">
+                      {stock.alternatives.map((alt, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded border border-green-100 flex justify-between items-center text-sm">
+                          <div>
+                            <div className="font-bold text-gray-900">{alt.symbol}</div>
+                            <div className="text-xs text-gray-500 truncate max-w-[150px]">{alt.name}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">${alt.price?.toFixed(2)}</div>
+                            <div className={`text - xs ${alt.changePercent >= 0 ? 'text-green-600' : 'text-red-600'} `}>
+                              {alt.changePercent >= 0 ? '+' : ''}{alt.changePercent?.toFixed(2)}%
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
+                )}
+              </>
+            )}
+          </div>
+        )
+      }
+    </div >
   );
 };
 
