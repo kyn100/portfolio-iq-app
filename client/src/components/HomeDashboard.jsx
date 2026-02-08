@@ -138,6 +138,23 @@ const HomeDashboard = ({ portfolioSummary, setActiveTab }) => {
                                             ))}
                                         </ul>
                                     </div>
+
+                                    {/* Strategies Recommendations */}
+                                    {outlook.strategies && outlook.strategies.length > 0 && (
+                                        <div className={`mt-4 pt-3 border-t ${outlook.sentiment === 'BEARISH' ? 'border-red-100' : outlook.sentiment === 'BULLISH' ? 'border-green-100' : 'border-gray-100'}`}>
+                                            <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${outlook.sentiment === 'BEARISH' ? 'text-red-500' : outlook.sentiment === 'BULLISH' ? 'text-green-600' : 'text-gray-500'}`}>
+                                                Strategies Recommendations (AI)
+                                            </p>
+                                            <div className="space-y-2">
+                                                {outlook.strategies.map((strategy, i) => (
+                                                    <div key={i} className={`p-2 rounded border text-xs flex items-start gap-2 ${outlook.sentiment === 'BEARISH' ? 'bg-red-50 border-red-100 text-red-800' : outlook.sentiment === 'BULLISH' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
+                                                        <span className="mt-0.5 text-xs">💡</span>
+                                                        <span>{strategy}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-4 text-gray-500 text-sm">

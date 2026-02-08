@@ -75,10 +75,18 @@ export const getMarketOutlook = async (forceRefresh = false) => {
           "keyDrivers": [
             "Driver 1 (e.g. 'Fed Speech at 2PM')",
             "Driver 2 (e.g. 'Nvidia Earnings impacting QQQ')"
+          ],
+          "strategies": [
+            "Strategy 1 (e.g. 'Buy SQQQ for short-term hedge' if Bearish, or 'Focus on Semis' if Bullish)",
+            "Strategy 2 (e.g. 'Cash is King' or 'Buy the dip on MSFT')"
           ]
         }
         
         Style: Professional, concise, actionable.
+        IMPORTANT: 
+        - If Sentiment is **BEARISH**, typically recommend HEDGING strategies (e.g. Inverse ETFs like SQQQ/SPXU, Defensive Sectors like Utilities, or Cash).
+        - If Sentiment is **BULLISH**, recommend Growth/Momentum or Buying Dips.
+        - If Sentiment is **VOLATILE**, recommend Caution/Reduced Position Size.
         `;
 
             const result = await model.generateContent(prompt);
@@ -124,6 +132,7 @@ export const getMarketOutlook = async (forceRefresh = false) => {
             prediction: "Market data retrieval interrupted.",
             reasoning: `We couldn't generate the full analysis in time. Please try refreshing. (Debug: ${debugMsg})`,
             keyDrivers: ["Data Timeout / Error"],
+            strategies: ["Hold Current Positions", "Monitor Key Technical Levels"],
             indices: [],
             error: debugMsg,
             lastUpdated: new Date().toISOString()
