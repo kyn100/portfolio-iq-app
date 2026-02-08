@@ -4,14 +4,17 @@ import { fetchMarketOutlook } from '../services/api';
 const HomeDashboard = ({ portfolioSummary, setActiveTab }) => {
     const [outlook, setOutlook] = useState(null);
     const [loadingOutlook, setLoadingOutlook] = useState(true);
+    const [loadingError, setLoadingError] = useState(null);
 
     useEffect(() => {
         const loadOutlook = async () => {
             try {
                 const data = await fetchMarketOutlook();
                 setOutlook(data);
+                setLoadingError(null);
             } catch (e) {
                 console.error("Failed to load market outlook", e);
+                setLoadingError(e.message);
             } finally {
                 setLoadingOutlook(false);
             }
@@ -139,7 +142,12 @@ const HomeDashboard = ({ portfolioSummary, setActiveTab }) => {
                             ) : (
                                 <div className="text-center py-4 text-gray-500 text-sm">
                                     <p>Unable to load market outlook.</p>
-                                    {outlook === null && <p className="text-xs text-red-400 mt-1">Check network or API keys.</p>}
+                                    {outlook === null && (
+                                        <div className="text-xs text-red-400 mt-1 px-4">
+                                            <p>Error: {loadingError || "Unknown Error"}</p>
+                                            <p className="mt-1 opacity-75">Check network or API keys.</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
