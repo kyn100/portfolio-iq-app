@@ -138,7 +138,8 @@ const HomeDashboard = ({ portfolioSummary, setActiveTab }) => {
                                 </div>
                             ) : (
                                 <div className="text-center py-4 text-gray-500 text-sm">
-                                    Unable to load market outlook.
+                                    <p>Unable to load market outlook.</p>
+                                    {outlook === null && <p className="text-xs text-red-400 mt-1">Check network or API keys.</p>}
                                 </div>
                             )}
                         </div>
