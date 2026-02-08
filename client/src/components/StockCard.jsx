@@ -26,11 +26,11 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
     }
 
     if (sellQty === stock.quantity) {
-      if (window.confirm(\`Sell all \${stock.quantity} shares of \${stock.symbol}?\`)) {
+      if (window.confirm(`Sell all ${stock.quantity} shares of ${stock.symbol}?`)) {
         onRemove(stock.id);
       }
     } else {
-      if (window.confirm(\`Sell \${sellQty} shares of \${stock.symbol}?\`)) {
+      if (window.confirm(`Sell ${sellQty} shares of ${stock.symbol}?`)) {
         onUpdate(stock.id, stock.quantity - sellQty, stock.purchase_price);
         setShowSell(false);
         setSellQty(1); // Reset
@@ -130,7 +130,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
         {/* Price */}
         <div className="flex items-baseline gap-2 mb-2">
           <span className="text-2xl font-bold">${stock.currentPrice?.toFixed(2)}</span>
-          <span className={`text - sm font - medium ${ priceChangeColor } `}>
+          <span className={`text - sm font - medium ${priceChangeColor} `}>
             {stock.change >= 0 ? '+' : ''}{stock.change?.toFixed(2)} ({stock.changePercent?.toFixed(2)}%)
           </span>
         </div>
@@ -143,7 +143,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
             </span>
           )}
           {stock.ytdReturn !== null && stock.ytdReturn !== undefined && (
-            <span className={`px - 2 py - 1 rounded - full ${ stock.ytdReturn >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700' }`}>
+            <span className={`px - 2 py - 1 rounded - full ${stock.ytdReturn >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
               YTD: {stock.ytdReturn >= 0 ? '+' : ''}{stock.ytdReturn.toFixed(1)}%
             </span>
           )}
@@ -181,7 +181,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500 text-xs">Return</span>
-                <span className={`font - bold ${ stock.gainLoss >= 0 ? 'text-green-600' : 'text-red-600' }`}>
+                <span className={`font - bold ${stock.gainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {stock.gainLoss >= 0 ? '+' : ''}{stock.gainLossPercent?.toFixed(2)}%
                 </span>
               </div>
@@ -224,7 +224,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
           <div className="mb-3 p-2 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">vs {sectorComparison.sectorName} ({sectorComparison.sectorETF})</span>
-              <span className={`text - xs px - 2 py - 0.5 rounded - full ${ getSectorRatingColor(sectorComparison.rating)} `}>
+              <span className={`text - xs px - 2 py - 0.5 rounded - full ${getSectorRatingColor(sectorComparison.rating)} `}>
                 {sectorComparison.rating}
               </span>
             </div>
@@ -271,17 +271,16 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                 <ul className="text-xs text-gray-600 space-y-1">
                   {analysis.recommendation.reasons.slice(0, 3).map((reason, idx) => (
                     <li key={idx} className="flex items-start gap-1">
-                      <span className={`mt - 1 w - 1.5 h - 1.5 rounded - full flex - shrink - 0 ${
-      reason.startsWith('Caution') || reason.startsWith('Bearish') || reason.startsWith('Also negative')
-      ? 'bg-red-400'
-      : reason.startsWith('Note') || reason.startsWith('Bullish') || reason.startsWith('Also positive')
-        ? 'bg-green-400'
-        : analysis.recommendation.recommendation === 'BUY'
-          ? 'bg-green-400'
-          : analysis.recommendation.recommendation === 'SELL'
-            ? 'bg-red-400'
-            : 'bg-yellow-400'
-    } `} />
+                      <span className={`mt - 1 w - 1.5 h - 1.5 rounded - full flex - shrink - 0 ${reason.startsWith('Caution') || reason.startsWith('Bearish') || reason.startsWith('Also negative')
+                          ? 'bg-red-400'
+                          : reason.startsWith('Note') || reason.startsWith('Bullish') || reason.startsWith('Also positive')
+                            ? 'bg-green-400'
+                            : analysis.recommendation.recommendation === 'BUY'
+                              ? 'bg-green-400'
+                              : analysis.recommendation.recommendation === 'SELL'
+                                ? 'bg-red-400'
+                                : 'bg-yellow-400'
+                        } `} />
                       <span>{reason}</span>
                     </li>
                   ))}
@@ -316,8 +315,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {stock.analystRatings.strongBuy > 0 && (
                     <div
                       className="bg-green-600 flex items-center justify-center text-white"
-                      style={{ width: `${ (stock.analystRatings.strongBuy / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100 }% ` }}
-                      title={`Strong Buy: ${ stock.analystRatings.strongBuy } `}
+                      style={{ width: `${(stock.analystRatings.strongBuy / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100}% ` }}
+                      title={`Strong Buy: ${stock.analystRatings.strongBuy} `}
                     >
                       {stock.analystRatings.strongBuy}
                     </div>
@@ -325,8 +324,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {stock.analystRatings.buy > 0 && (
                     <div
                       className="bg-green-400 flex items-center justify-center text-white"
-                      style={{ width: `${ (stock.analystRatings.buy / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100 }% ` }}
-                      title={`Buy: ${ stock.analystRatings.buy } `}
+                      style={{ width: `${(stock.analystRatings.buy / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100}% ` }}
+                      title={`Buy: ${stock.analystRatings.buy} `}
                     >
                       {stock.analystRatings.buy}
                     </div>
@@ -334,8 +333,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {stock.analystRatings.hold > 0 && (
                     <div
                       className="bg-yellow-400 flex items-center justify-center text-gray-800"
-                      style={{ width: `${ (stock.analystRatings.hold / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100 }% ` }}
-                      title={`Hold: ${ stock.analystRatings.hold } `}
+                      style={{ width: `${(stock.analystRatings.hold / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100}% ` }}
+                      title={`Hold: ${stock.analystRatings.hold} `}
                     >
                       {stock.analystRatings.hold}
                     </div>
@@ -343,8 +342,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {stock.analystRatings.sell > 0 && (
                     <div
                       className="bg-red-400 flex items-center justify-center text-white"
-                      style={{ width: `${ (stock.analystRatings.sell / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100 }% ` }}
-                      title={`Sell: ${ stock.analystRatings.sell } `}
+                      style={{ width: `${(stock.analystRatings.sell / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100}% ` }}
+                      title={`Sell: ${stock.analystRatings.sell} `}
                     >
                       {stock.analystRatings.sell}
                     </div>
@@ -352,8 +351,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   {stock.analystRatings.strongSell > 0 && (
                     <div
                       className="bg-red-600 flex items-center justify-center text-white"
-                      style={{ width: `${ (stock.analystRatings.strongSell / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100 }% ` }}
-                      title={`Strong Sell: ${ stock.analystRatings.strongSell } `}
+                      style={{ width: `${(stock.analystRatings.strongSell / (stock.analystRatings.strongBuy + stock.analystRatings.buy + stock.analystRatings.hold + stock.analystRatings.sell + stock.analystRatings.strongSell)) * 100}% ` }}
+                      title={`Strong Sell: ${stock.analystRatings.strongSell} `}
                     >
                       {stock.analystRatings.strongSell}
                     </div>
@@ -377,7 +376,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                         🏦 {holder.name}
                       </span>
                       <span className="text-indigo-600 font-medium">
-                        {holder.pctHeld ? `${ (holder.pctHeld * 100).toFixed(1) }% ` : ''}
+                        {holder.pctHeld ? `${(holder.pctHeld * 100).toFixed(1)}% ` : ''}
                       </span>
                     </div>
                   ))}
@@ -404,7 +403,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
             </div>
             <div>
               <span className="text-gray-500">Gain/Loss:</span>
-              <span className={`ml - 1 font - medium ${ gainLossColor } `}>
+              <span className={`ml - 1 font - medium ${gainLossColor} `}>
                 {stock.gainLoss >= 0 ? '+' : ''}${stock.gainLoss?.toFixed(2)} ({stock.gainLossPercent?.toFixed(1)}%)
               </span>
             </div>
@@ -425,13 +424,13 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
               <div className="bg-white p-2 rounded border border-purple-100">
                 <div className="text-xs text-gray-500">Target Entry</div>
                 <div className="font-semibold text-purple-900">
-                  {stock.target_price ? `$${ stock.target_price.toFixed(2) } ` : '-'}
+                  {stock.target_price ? `$${stock.target_price.toFixed(2)} ` : '-'}
                 </div>
               </div>
               <div className="bg-white p-2 rounded border border-purple-100">
                 <div className="text-xs text-gray-500">Stop Loss</div>
                 <div className="font-semibold text-red-700">
-                  {stock.stop_loss ? `$${ stock.stop_loss.toFixed(2) } ` : '-'}
+                  {stock.stop_loss ? `$${stock.stop_loss.toFixed(2)} ` : '-'}
                 </div>
               </div>
             </div>
@@ -463,7 +462,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
         >
           {expanded ? 'Hide' : 'Show'} Details
           <svg
-            className={`w - 4 h - 4 transition - transform ${ expanded ? 'rotate-180' : '' } `}
+            className={`w - 4 h - 4 transition - transform ${expanded ? 'rotate-180' : ''} `}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -527,7 +526,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-gray-800">{asset.symbol}</span>
-                            <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${ asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' } `}>
+                            <span className={`text - [10px] px - 1.5 py - 0.5 rounded - full ${asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} `}>
                               {asset.similarity} Match
                             </span>
                           </div>
@@ -628,13 +627,13 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
               </div>
               <div className="bg-white rounded-lg p-2 border">
                 <div className="text-gray-500 text-xs">YTD Return</div>
-                <div className={`font - bold ${ ytdColor } `}>
-                  {stock.ytdReturn !== null ? `${ stock.ytdReturn >= 0 ? '+' : '' }${ stock.ytdReturn.toFixed(1) }% ` : 'N/A'}
+                <div className={`font - bold ${ytdColor} `}>
+                  {stock.ytdReturn !== null ? `${stock.ytdReturn >= 0 ? '+' : ''}${stock.ytdReturn.toFixed(1)}% ` : 'N/A'}
                 </div>
               </div>
               <div className="bg-white rounded-lg p-2 border">
                 <div className="text-gray-500 text-xs">Dividend Yield</div>
-                <div className="font-bold">{stock.dividendYield ? `${ stock.dividendYield.toFixed(2) }% ` : 'N/A'}</div>
+                <div className="font-bold">{stock.dividendYield ? `${stock.dividendYield.toFixed(2)}% ` : 'N/A'}</div>
               </div>
               <div className="bg-white rounded-lg p-2 border">
                 <div className="text-gray-500 text-xs">52W High</div>
@@ -655,25 +654,25 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <div className="text-xs text-gray-400">Stock YTD</div>
-                    <div className={`font - medium ${ sectorComparison.stockYTD >= 0 ? 'text-green-600' : 'text-red-600' } `}>
+                    <div className={`font - medium ${sectorComparison.stockYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                       {sectorComparison.stockYTD?.toFixed(1)}%
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Sector YTD ({sectorComparison.sectorETF})</div>
-                    <div className={`font - medium ${ sectorComparison.sectorYTD >= 0 ? 'text-green-600' : 'text-red-600' } `}>
+                    <div className={`font - medium ${sectorComparison.sectorYTD >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                       {sectorComparison.sectorYTD?.toFixed(1)}%
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Stock 1M</div>
-                    <div className={`font - medium ${ sectorComparison.stock1Month >= 0 ? 'text-green-600' : 'text-red-600' } `}>
+                    <div className={`font - medium ${sectorComparison.stock1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                       {sectorComparison.stock1Month?.toFixed(1)}%
                     </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-400">Sector 1M</div>
-                    <div className={`font - medium ${ sectorComparison.sector1Month >= 0 ? 'text-green-600' : 'text-red-600' } `}>
+                    <div className={`font - medium ${sectorComparison.sector1Month >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                       {sectorComparison.sector1Month?.toFixed(1)}%
                     </div>
                   </div>
@@ -693,10 +692,9 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   <div className="font-bold text-lg">
                     {analysis.indicators?.rsi?.toFixed(1) || 'N/A'}
                   </div>
-                  <div className={`text - xs ${
-      analysis.indicators?.rsi < 30 ? 'text-green-600' :
-      analysis.indicators?.rsi > 70 ? 'text-red-600' : 'text-gray-500'
-    } `}>
+                  <div className={`text - xs ${analysis.indicators?.rsi < 30 ? 'text-green-600' :
+                      analysis.indicators?.rsi > 70 ? 'text-red-600' : 'text-gray-500'
+                    } `}>
                     {analysis.indicators?.rsi < 30 ? 'Oversold' :
                       analysis.indicators?.rsi > 70 ? 'Overbought' : 'Neutral'}
                   </div>
@@ -708,9 +706,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                   <div className="font-bold text-lg">
                     {analysis.indicators?.macd?.histogram?.toFixed(3) || 'N/A'}
                   </div>
-                  <div className={`text - xs ${
-      analysis.indicators?.macd?.histogram > 0 ? 'text-green-600' : 'text-red-600'
-    } `}>
+                  <div className={`text - xs ${analysis.indicators?.macd?.histogram > 0 ? 'text-green-600' : 'text-red-600'
+                    } `}>
                     {analysis.indicators?.macd?.histogram > 0 ? 'Bullish' : 'Bearish'}
                   </div>
                 </div>
@@ -750,11 +747,11 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                     <div className="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden flex">
                       <div
                         className="h-full bg-green-500"
-                        style={{ width: `${ analysis.indicators.moneyFlow.inPercent }% ` }}
+                        style={{ width: `${analysis.indicators.moneyFlow.inPercent}% ` }}
                       />
                       <div
                         className="h-full bg-red-500"
-                        style={{ width: `${ analysis.indicators.moneyFlow.outPercent }% ` }}
+                        style={{ width: `${analysis.indicators.moneyFlow.outPercent}% ` }}
                       />
                     </div>
                     <div className="w-16 text-red-600 font-medium">{analysis.indicators.moneyFlow.outPercent}% Out</div>
@@ -772,13 +769,12 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                     {analysis.recommendation.signals.map((signal, i) => (
                       <span
                         key={i}
-                        className={`text - xs px - 2 py - 1 rounded - full ${
-      signal.sentiment === 'bullish' ? 'bg-green-100 text-green-700' :
-      signal.sentiment === 'bearish' ? 'bg-red-100 text-red-700' :
-        signal.sentiment?.includes('bullish') ? 'bg-green-50 text-green-600' :
-          signal.sentiment?.includes('bearish') ? 'bg-red-50 text-red-600' :
-            'bg-gray-100 text-gray-600'
-    } `}
+                        className={`text - xs px - 2 py - 1 rounded - full ${signal.sentiment === 'bullish' ? 'bg-green-100 text-green-700' :
+                            signal.sentiment === 'bearish' ? 'bg-red-100 text-red-700' :
+                              signal.sentiment?.includes('bullish') ? 'bg-green-50 text-green-600' :
+                                signal.sentiment?.includes('bearish') ? 'bg-red-50 text-red-600' :
+                                  'bg-gray-100 text-gray-600'
+                          } `}
                       >
                         {signal.indicator}: {signal.signal}
                       </span>
@@ -827,8 +823,8 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                           ) : (
                             // HOLD
                             [
-                              ...(analysis.recommendation.bullishReasons || []).map(r => `Bullish: ${ r } `),
-                              ...(analysis.recommendation.bearishReasons || []).map(r => `Bearish: ${ r } `)
+                              ...(analysis.recommendation.bullishReasons || []).map(r => `Bullish: ${r} `),
+                              ...(analysis.recommendation.bearishReasons || []).map(r => `Bearish: ${r} `)
                             ].slice(0, 4).map((r, i) => (
                               <li key={i} className="flex items-start gap-2 text-gray-700">
                                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0"></span>
@@ -918,7 +914,7 @@ const StockCard = ({ stock, onRemove, onUpdate, onTrade, isWatchlist = false, is
                         </div>
                         <div className="text-right">
                           <div className="font-medium">${alt.price?.toFixed(2)}</div>
-                          <div className={`text - xs ${ alt.changePercent >= 0 ? 'text-green-600' : 'text-red-600' } `}>
+                          <div className={`text - xs ${alt.changePercent >= 0 ? 'text-green-600' : 'text-red-600'} `}>
                             {alt.changePercent >= 0 ? '+' : ''}{alt.changePercent?.toFixed(2)}%
                           </div>
                         </div>
