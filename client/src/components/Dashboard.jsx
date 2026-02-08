@@ -14,6 +14,7 @@ import {
   fetchPortfolio,
   addToPortfolio,
   removeFromPortfolio,
+  updatePortfolioItem, // Added
   fetchWatchlist,
   addToWatchlist,
   removeFromWatchlist,
@@ -89,6 +90,11 @@ const Dashboard = ({ session }) => {
 
     await loadData();
     setShowAddForm(false);
+  };
+
+  const handleUpdatePortfolio = async (id, quantity, purchasePrice) => {
+    await updatePortfolioItem(id, quantity, purchasePrice);
+    await loadData();
   };
 
   const handleAddToWatchlist = async (symbol, notes) => {
@@ -487,6 +493,7 @@ const Dashboard = ({ session }) => {
                     key={stock.id}
                     stock={stock}
                     onRemove={handleRemoveFromPortfolio}
+                    onUpdate={handleUpdatePortfolio}
                     isWatchlist={false}
                   />
                 ))}
