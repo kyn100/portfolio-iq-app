@@ -105,9 +105,10 @@ export const getMarketOutlook = async (forceRefresh = false) => {
         return {
             sentiment: "NEUTRAL",
             prediction: "Market data is currently being updated.",
-            reasoning: "Unable to generate AI analysis at this moment. Please check back shortly.",
+            reasoning: `Unable to generate AI analysis at this moment. Please check back shortly. (Debug: ${error.message})`,
             keyDrivers: ["Market Data Unavailable"],
             indices: [],
+            error: error.message, // Return error for debugging
             lastUpdated: new Date().toISOString()
         };
     }
