@@ -448,24 +448,44 @@ const StockCard = ({ stock, onRemove, onTrade, isWatchlist = false, isFocusList 
                 )}
 
                 {/* Report Section */}
-                {similarReport && (
-                  <div className="mt-4 pt-4 border-t border-indigo-100">
-                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
-                    <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
-                          thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
-                          th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap" {...props} />,
-                          td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
-                        }}
-                      >
-                        {similarReport}
-                      </ReactMarkdown>
+                {similarReport && (() => {
+                  // Split the report into Summary (Table) and Detailed Analysis
+                  // The AI usually outputs "# Comparative Analysis\n\n## Comparative Summary\n...Table...\n\n## Detailed Analysis..."
+                  const parts = similarReport.split(/## (?:Detailed Analysis|Key Takeaways|Risk Assessment)/i);
+                  const summaryPart = parts[0];
+                  // Re-add the header we split by if possible, or just append the rest
+                  // Since we split by a regex, we might lose the exact header text, so we assume "Detailed Analysis" or just render the rest
+                  // Simpler: just render the rest of the parts joined back
+                  const detailedPart = parts.length > 1 ? `## Detailed Analysis${parts.slice(1).join('\n## Detailed Analysis')}` : '';
+
+                  return (
+                    <div className="mt-4 pt-4 border-t border-indigo-100">
+                      <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
+
+                      {/* Summary Section (Scrollable Table Area) */}
+                      <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-80 overflow-y-auto custom-scrollbar mb-4">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
+                            thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                            th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap sticky top-0 bg-gray-100 z-10" {...props} />,
+                            td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
+                          }}
+                        >
+                          {summaryPart}
+                        </ReactMarkdown>
+                      </div>
+
+                      {/* Detailed Analysis (Static) */}
+                      {detailedPart && (
+                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{detailedPart}</ReactMarkdown>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Empty State (Only if both are missing) */}
                 {(!similarAssets || similarAssets.length === 0) && !similarReport && (
