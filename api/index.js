@@ -14,6 +14,8 @@ import stockDetailsHandler from './_controllers/stock-details.js';
 import recommendationsHandler from './_controllers/recommendations.js';
 import blackswanHandler from './_controllers/blackswan.js';
 import grayrhinoHandler from './_controllers/grayrhino.js';
+import marketRouter from '../server/routes/market.js';
+import focusListRouter from '../server/routes/focusList.js';
 
 const app = express();
 
@@ -45,6 +47,8 @@ app.use('/api/health', healthHandler);
 app.use('/api/recommendations', recommendationsHandler);
 app.use('/api/blackswan', blackswanHandler);
 app.use('/api/grayrhino', grayrhinoHandler);
+app.use('/api/market', marketRouter);
+app.use('/api/focus-list', focusListRouter);
 
 // Stock Details
 app.all('/api/stocks/:symbol', stockDetailsHandler);
