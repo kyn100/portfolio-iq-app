@@ -449,18 +449,45 @@ const StockCard = ({ stock, onRemove, onTrade, isWatchlist = false, isFocusList 
 
                 {/* Report Section */}
                 {similarReport && (() => {
-                  // Split the report into Summary (Table) and Detailed Analysis
-                  // The AI usually outputs "# Comparative Analysis\n\n## Comparative Summary\n...Table...\n\n## Detailed Analysis..."
-                  // Split the report into Summary (Table) and Detailed Analysis
-                  // The AI usually outputs "# Comparative Analysis\n\n## Comparative Summary\n...Table...\n\n## Detailed Analysis..."
-                  // We split by any header that looks like a new section
-                  const parts = similarReport.split(/(?=## (?:Detailed Analysis|Individual|Financial|Key Takeaways|Risk Assessment|Conclusion))/i);
-                  const summaryPart = parts[0];
+                  // We need to parse the markdown into 3 parts:
+                  // 1. Intro (Header & Logic) -> STATIC
+                  // 2. Comparative Summary (Table) -> SCROLLABLE
+                  // 3. Detailed Analysis (Rest) -> STATIC
+
+                  // 1. Find start of Comparative Summary
+                  const summaryHeaderPattern = /## Comparative Summary/i;
+                  const summaryMatch = similarReport.match(summaryHeaderPattern);
+
+                  let introPart = "";
+                  let rest = "";
+
+                  if (summaryMatch) {
+                    introPart = similarReport.substring(0, summaryMatch.index);
+                    rest = similarReport.substring(summaryMatch.index);
+                  } else {
+                    // Fallback: If header missing, assume it starts with summary/table or is just one blob
+                    introPart = "";
+                    rest = similarReport;
+                  }
+
+                  // 2. Split 'rest' into SummaryTable and DetailedAnalysis
+                  // Look for the next major header (e.g. ## Detailed Analysis)
+                  const nextSectionRegex = /(?=## (?:Detailed Analysis|Individual|Financial|Key Takeaways|Risk Assessment|Conclusion))/i;
+                  const parts = rest.split(nextSectionRegex);
+
+                  const summaryPart = parts[0]; // This contains "## Comparative Summary" + Table
                   const detailedPart = parts.length > 1 ? parts.slice(1).join('') : '';
 
                   return (
                     <div className="mt-4 pt-4 border-t border-indigo-100">
                       <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
+
+                      {/* 1. Intro Section (Static) */}
+                      {introPart.trim() && (
+                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700 mb-4">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{introPart}</ReactMarkdown>
+                        </div>
+                      )}
 
                       {/* Summary Section (Scrollable Table Area) */}
                       <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-80 overflow-y-auto custom-scrollbar mb-4">
