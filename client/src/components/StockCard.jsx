@@ -426,53 +426,51 @@ const StockCard = ({ stock, onRemove, onTrade, isWatchlist = false, isFocusList 
                   </button>
                 </div>
 
-                <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                  {/* List of Similar Assets */}
-                  {similarAssets && similarAssets.length > 0 && (
-                    <div className="space-y-3 mb-6">
-                      <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Identify Similar Setups</h5>
-                      {similarAssets.map((asset) => (
-                        <div key={asset.symbol} className="flex justify-between items-start border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-800">{asset.symbol}</span>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {asset.similarity} Match
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-0.5">{asset.name}</p>
-                            <p className="text-xs text-indigo-600 mt-1 italic">"{asset.reason}"</p>
+                {/* List of Similar Assets */}
+                {similarAssets && similarAssets.length > 0 && (
+                  <div className="space-y-3 mb-6">
+                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Identify Similar Setups</h5>
+                    {similarAssets.map((asset) => (
+                      <div key={asset.symbol} className="flex justify-between items-start border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-800">{asset.symbol}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${asset.similarity === 'High' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {asset.similarity} Match
+                            </span>
                           </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{asset.name}</p>
+                          <p className="text-xs text-indigo-600 mt-1 italic">"{asset.reason}"</p>
                         </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Report Section */}
-                  {similarReport && (
-                    <div className="mt-4 pt-4 border-t border-indigo-100">
-                      <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
-                      <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
-                            thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
-                            th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap" {...props} />,
-                            td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
-                          }}
-                        >
-                          {similarReport}
-                        </ReactMarkdown>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
+                )}
 
-                  {/* Empty State (Only if both are missing) */}
-                  {(!similarAssets || similarAssets.length === 0) && !similarReport && (
-                    <p className="text-sm text-gray-500 italic">No similar setups found at this time.</p>
-                  )}
-                </div>
+                {/* Report Section */}
+                {similarReport && (
+                  <div className="mt-4 pt-4 border-t border-indigo-100">
+                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">AI Comparative Analysis</h5>
+                    <div className="prose prose-sm prose-indigo max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto custom-scrollbar">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({ node, ...props }) => <table className="min-w-full divide-y divide-gray-200 text-xs" {...props} />,
+                          thead: ({ node, ...props }) => <thead className="bg-gray-100" {...props} />,
+                          th: ({ node, ...props }) => <th className="px-3 py-2 text-left font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap" {...props} />,
+                          td: ({ node, ...props }) => <td className="px-3 py-2 whitespace-nowrap border-b border-gray-100" {...props} />,
+                        }}
+                      >
+                        {similarReport}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State (Only if both are missing) */}
+                {(!similarAssets || similarAssets.length === 0) && !similarReport && (
+                  <p className="text-sm text-gray-500 italic">No similar setups found at this time.</p>
+                )}
               </div>
             )}
           </div>
