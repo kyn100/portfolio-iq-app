@@ -378,6 +378,9 @@ export const fetchGrayRhinoEvents = async () => {
 export const fetchMarketOutlook = async (force = false) => {
   const url = `${API_BASE}/market/outlook${force ? '?force=true' : ''}`;
   const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch market outlook');
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Server Error: ${response.status} ${response.statusText} - ${errorText.substring(0, 100)}`);
+  }
   return response.json();
 };
