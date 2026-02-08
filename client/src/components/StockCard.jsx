@@ -451,12 +451,12 @@ const StockCard = ({ stock, onRemove, onTrade, isWatchlist = false, isFocusList 
                 {similarReport && (() => {
                   // Split the report into Summary (Table) and Detailed Analysis
                   // The AI usually outputs "# Comparative Analysis\n\n## Comparative Summary\n...Table...\n\n## Detailed Analysis..."
-                  const parts = similarReport.split(/## (?:Detailed Analysis|Key Takeaways|Risk Assessment)/i);
+                  // Split the report into Summary (Table) and Detailed Analysis
+                  // The AI usually outputs "# Comparative Analysis\n\n## Comparative Summary\n...Table...\n\n## Detailed Analysis..."
+                  // We split by any header that looks like a new section
+                  const parts = similarReport.split(/(?=## (?:Detailed Analysis|Individual|Financial|Key Takeaways|Risk Assessment|Conclusion))/i);
                   const summaryPart = parts[0];
-                  // Re-add the header we split by if possible, or just append the rest
-                  // Since we split by a regex, we might lose the exact header text, so we assume "Detailed Analysis" or just render the rest
-                  // Simpler: just render the rest of the parts joined back
-                  const detailedPart = parts.length > 1 ? `## Detailed Analysis${parts.slice(1).join('\n## Detailed Analysis')}` : '';
+                  const detailedPart = parts.length > 1 ? parts.slice(1).join('') : '';
 
                   return (
                     <div className="mt-4 pt-4 border-t border-indigo-100">
